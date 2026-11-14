@@ -1,0 +1,71 @@
+"""Pure-pandas feature helpers shared by the prep scripts.
+
+Run `python prep/features.py` for the self-check.
+"""
+import pandas as pd
+
+FALLOW_MAX = 0.25  # seasonal peak NDVI below this = bare/fallow (bright dry soil reads 0.10-0.15)
+CROP_MIN = 0.40    # seasonal peak NDVI at or above this = an active crop
+# ponytail: fixed NDVI thresholds; calibrate on known fields, k-means on monthly curves if they misfire
+
+
+def add_anomaly(df: pd.DataFrame, min_years: int = 3) -> pd.DataFrame:
+    """Add a z-score `anomaly` per field, variable and calendar month (long-format input)."""
+    out = df.copy()
+    cal = pd.to_datetime(out["month"]).dt.month
+    g = out.groupby([out["field_id"], out["variable"], cal])["value"]
+    mean, std, n = g.transform("mean"), g.transform("std"), g.transform("count")
+    z = (out["value"] - mean) / std
+    out["anomaly"] = z.where((n >= min_years) & (std > 0))
+    return out
+
+
+def classify_seasons(ndvi: pd.DataFrame) -> pd.DataFrame:
+    """Label each field-season from monthly NDVI rows (`field_id, month, value`).
+
+    season = harvest year; winter = Nov(prev year)-May, summer = Jun-Sep.
+    """
+    d = ndvi.copy()
+    date = pd.to_datetime(d["month"])
+    m = date.dt.month
+    d["season"] = date.dt.year + (m >= 11).astype(int)
+    keys = ["field_id", "season"]
+    winter = d[(m >= 11) | (m <= 5)].groupby(keys)["value"].max().rename("winter_max")
+    summer = d[(m >= 6) & (m <= 9)].groupby(keys)["value"].max().rename("summer_max")
+    out = pd.concat([winter, summer], axis=1).reset_index()
+
+    def label(r):
+        if r.summer_max >= CROP_MIN:
+            return "irrigated_summer"  # green in the dry season = irrigated
+        if r.winter_max >= CROP_MIN:
+            return "cereal"
+        if r.winter_max < FALLOW_MAX:
+            return "fallow"
+        return "uncertain"
+
+    out["ndvi_max"] = out[["winter_max", "summer_max"]].max(axis=1)
+    out["class"] = out.apply(label, axis=1)
+    return out
+
+
+def _selftest():
+    months = pd.date_range("2021-11-01", "2022-09-01", freq="MS").strftime("%Y-%m")
+    peak = {"A": ("2022-03", 0.6), "B": (None, 0), "C": ("2022-07", 0.55), "D": ("2022-02", 0.3)}
+    rows = [
+        {"field_id": f, "month": mo, "value": v if mo == pm else 0.15}
+        for f, (pm, v) in peak.items() for mo in months
+    ]
+    got = classify_seasons(pd.DataFrame(rows)).set_index("field_id")["class"].to_dict()
+    assert got == {"A": "cereal", "B": "fallow", "C": "irrigated_summer", "D": "uncertain"}, got
+
+    ts = pd.DataFrame({"field_id": "A", "variable": "ndvi",
+                       "month": ["2019-03", "2020-03", "2021-03", "2022-03"],
+                       "value": [0.5, 0.5, 0.5, 0.1]})
+    an = add_anomaly(ts)["anomaly"]
+    assert an.iloc[-1] < -1 < 0 < an.iloc[0], an.tolist()
+    assert add_anomaly(ts.head(2))["anomaly"].isna().all()  # too few years -> empty
+    print("ok")
+
+
+if __name__ == "__main__":
+    _selftest()

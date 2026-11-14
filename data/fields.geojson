@@ -1,0 +1,21 @@
+{
+  "type": "FeatureCollection",
+  "_note": "PLACEHOLDER polygons (~200 m squares) so Roles 2 and 3 can test. Role 4 replaces them with real fields drawn on geojson.io (each > 1 ha, away from buildings).",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"field_id": "valley_deir_alla", "name_ar": "دير علا - وادي الأردن", "name_en": "Deir Alla, Jordan Valley", "zone": "valley", "rain_mm": 280},
+      "geometry": {"type": "Polygon", "coordinates": [[[35.618, 32.198], [35.620, 32.198], [35.620, 32.200], [35.618, 32.200], [35.618, 32.198]]]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"field_id": "highland_ramtha", "name_ar": "سهول الرمثا - المرتفعات الشمالية", "name_en": "Ramtha plains, northern highlands", "zone": "highland", "rain_mm": 250},
+      "geometry": {"type": "Polygon", "coordinates": [[[35.990, 32.540], [35.992, 32.540], [35.992, 32.542], [35.990, 32.542], [35.990, 32.540]]]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"field_id": "azraq_farm", "name_ar": "مزرعة الأزرق", "name_en": "Azraq farm", "zone": "azraq", "rain_mm": 60},
+      "geometry": {"type": "Polygon", "coordinates": [[[36.800, 31.860], [36.802, 31.860], [36.802, 31.862], [36.800, 31.862], [36.800, 31.860]]]}
+    }
+  ]
+}
