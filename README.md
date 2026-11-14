@@ -2,7 +2,7 @@
 
 > NASA Space Apps Challenge 2026 · Challenge: **Field Shift: Adapting Farms with NASA Data** · Local event: Jordan University of Science and Technology (JUST), 14–15 Nov 2026
 
-**Live app: https://field-shift-maru.streamlit.app**
+**Live app: https://zaid-sh05.github.io/field-shift/** (React site) · earlier Streamlit version: https://field-shift-maru.streamlit.app
 
 An Arabic-first decision-support tool for rainfed farms around **Maru, Irbid (northern Jordan)**. A farmer picks a field, sets their priorities, and compares **three crop-rotation strategies side by side**: wheat–wheat, wheat–lentil and wheat–fallow (the rotations tested at Maru in published trials), against what the field has been doing. Each rotation gets a score for the farmer's own priorities, a plain sentence and the numbers behind every criterion, a month-by-month crop and bare-soil calendar, and a **confidence badge on every score**, so the farmer can see what the satellites observed and what is only an estimate.
 
@@ -70,6 +70,8 @@ The file formats are fixed in [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md). 
 
 ```text
 app.py                 Streamlit entry point (Role 1 wires it, Role 6 owns the UI)
+web/                   React site (Vite). Reads web/src/data.json; `npm test` checks its engine against Python
+docs/app/              The built site, served by GitHub Pages
 src/scoring.py         Rotation scoring: five criteria, the farmer's weights, honesty flags
 src/                   Role 6 interface: screens, components, state, translations (i18n.json)
 styles/                Role 6 design system (main.css)
@@ -80,6 +82,7 @@ prep/                  Offline data scripts (Roles 2, 3, 4)
   validate.py          NASA vs Maru station checks → data/validation.json
   field_context.py     Season rain (IMERG) and soil (SoilGrids) per field → data/
   figures.py           Slide figures → docs/figures/
+  export_web.py        Engine results for every field and scenario → web/src/data.json
   features.py          Anomalies, season classification, NDVI monthly profile (pure pandas, self-tested)
 data/                  Generated data files + fields.geojson
 docs/                  Data contract, research notes
@@ -95,6 +98,13 @@ cd field-shift
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 streamlit run app.py
+```
+
+To rebuild the React site after a data or engine change:
+
+```bash
+python prep/export_web.py      # a few minutes: every field × 56 climate scenarios
+cd web && npm install && npm test && npm run build   # writes docs/app/
 ```
 
 To regenerate the satellite data (Role 3):

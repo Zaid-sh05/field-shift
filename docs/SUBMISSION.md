@@ -24,7 +24,8 @@ The tool supports the farmer's decision. It does not make it.
 
 ## 3. Final project link
 
-- Live app: https://field-shift-maru.streamlit.app
+- Live app: https://zaid-sh05.github.io/field-shift/
+- Earlier Streamlit version: https://field-shift-maru.streamlit.app
 - Code and data: https://github.com/Zaid-sh05/field-shift
 
 ## 4. Project details
@@ -65,9 +66,9 @@ The tool supports the farmer's decision. It does not make it.
    - *Harvests:* the share of seasons that end in a harvest. We assume no prices or yields.
 
    The farmer's sliders are the weights. The app flags a close call when the top two are within 5 points or when a 10% change in one weight flips the order, and it warns when the farmer's top priority rests on low-confidence data. It ranks; it never recommends.
-7. *Interface.* Streamlit, Arabic right-to-left with an English switch. The app reads prepared files only, so it keeps working on weak internet.
+7. *Interface.* A React single-page site, Arabic right-to-left with an English switch, built for phones first. It ships with every result precomputed by the Python engine, so it needs no server and keeps working on weak internet; a test checks the site's JavaScript against the Python engine on 36 reference cases.
 
-**Tools.** Python, Google Earth Engine, pandas, Streamlit, folium, matplotlib, pytest, GitHub, Streamlit Community Cloud.
+**Tools.** Python, Google Earth Engine, pandas, React, Vite, Leaflet, Streamlit, matplotlib, pytest, GitHub Pages.
 
 **Goals.**
 
