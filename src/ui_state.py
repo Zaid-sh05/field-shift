@@ -42,3 +42,9 @@ def validate_weights(weights: Mapping, *, allow_unset=False) -> dict:
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not isfinite(value) or value < 0:
             raise ValueError("Weights must be finite nonnegative numbers")
     return dict(weights)
+
+
+def select_field(state, field_id, valid_ids):
+    if field_id is not None and field_id not in valid_ids:
+        raise ValueError("Unknown field ID")
+    return update_state(state, selected_field=field_id)

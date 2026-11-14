@@ -6,8 +6,10 @@ provisional Python injection point, not an amendment to DATA_CONTRACT.md.
 Role 5 must confirm its response shape and slider mapping before live wiring.
 """
 import json
+import csv
+from math import isfinite
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field as dataclass_field
 from pathlib import Path
 from typing import Protocol
 
@@ -19,6 +21,7 @@ from .ui_i18n import translate
 class FieldData:
     geojson: dict
     issues: tuple[str, ...] = ()
+    static: dict = dataclass_field(default_factory=dict)
 
 
 class DataAdapter(Protocol):
@@ -35,6 +38,7 @@ class FileDataAdapter:
         self.data_dir = Path(data_dir) if data_dir is not None else Path(__file__).resolve().parents[1] / "data"
 
     def load_fields(self) -> FieldData:
+        from .ui_components.field_selector import valid_polygon
         empty = {"type": "FeatureCollection", "features": []}
         try:
             data = json.loads((self.data_dir / "fields.geojson").read_text(encoding="utf-8"))
@@ -48,7 +52,7 @@ class FileDataAdapter:
                 return FieldData(empty, ("fields.geojson: invalid feature",))
             props = feature.get("properties")
             geometry = feature.get("geometry")
-            if not isinstance(props, dict) or not isinstance(geometry, dict) or geometry.get("type") != "Polygon" or not geometry.get("coordinates"):
+            if not isinstance(props, dict) or not valid_polygon(geometry):
                 return FieldData(empty, ("fields.geojson: expected polygon and properties",))
             field_id = props.get("field_id")
             if not isinstance(field_id, str) or not field_id or field_id in seen:
@@ -59,7 +63,36 @@ class FileDataAdapter:
             for key in ("name_ar", "name_en", "rain_mm"):
                 if props.get(key) is None:
                     issues.append(f"{field_id}: {key} unavailable")
-        return FieldData(data, tuple(issues))
+        static = {}
+        try:
+            with (self.data_dir / "field_static.csv").open(encoding="utf-8", newline="") as handle:
+                rows = csv.DictReader(handle)
+                if not {"field_id", "elevation_m", "slope_deg"}.issubset(rows.fieldnames or []):
+                    raise ValueError("missing static columns")
+                duplicates = set()
+                for row in rows:
+                    fid = row.get("field_id")
+                    if fid not in seen:
+                        issues.append("field_static.csv: unknown field ID")
+                        continue
+                    if fid in static or fid in duplicates:
+                        static.pop(fid, None)
+                        duplicates.add(fid)
+                        issues.append(f"{fid}: duplicate static metadata")
+                        continue
+                    values = {}
+                    for key in ("elevation_m", "slope_deg"):
+                        try:
+                            value = float(row.get(key))
+                            if not isfinite(value) or value == -999 or (key == "slope_deg" and not 0 <= value <= 90):
+                                raise ValueError("invalid measurement")
+                            values[key] = value
+                        except (TypeError, ValueError):
+                            values[key] = None
+                    static[fid] = values
+        except (OSError, ValueError, csv.Error) as exc:
+            issues.append(f"field_static.csv: {exc}")
+        return FieldData(data, tuple(issues), static)
 
 
 @dataclass(frozen=True)
@@ -118,7 +151,7 @@ def render_frontend(*, adapter: DataAdapter | None = None, preview=False) -> Non
             for issue in data.issues:
                 st.write(issue)
     if state["screen"] == "field":
-        field.render(st, t, data.geojson, state)
+        field.render(st, t, data.geojson, state, static=data.static)
     elif state["screen"] == "priorities":
         priorities.render(st, t, state)
     else:
