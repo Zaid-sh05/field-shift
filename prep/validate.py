@@ -4,7 +4,7 @@ Temperature: NASA POWER raw vs lapse-rate corrected (5, 6.5, 7 °C/km; 6.5 is th
 not fitted to these months). Rainfall: NASA POWER and GPM IMERG vs the station.
 
 Usage:
-  python prep/validate.py --package PATH/TO/Maru_Jordan_FieldShift/data --project YOUR_GEE_PROJECT
+  python prep/validate.py --project YOUR_GEE_PROJECT        (inputs default to data/source/)
 """
 import argparse
 import json
@@ -46,7 +46,7 @@ def imerg_months(months):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--package", required=True, help="folder with 09_nasa_local_comparison.csv")
+    ap.add_argument("--package", default=str(DATA / "source"), help="folder with 09_nasa_local_comparison.csv")
     ap.add_argument("--project", required=True)
     args = ap.parse_args()
 

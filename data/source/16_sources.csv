@@ -1,0 +1,10 @@
+﻿source_id,url,source_type,access_status,review_date
+NASA_POWER,https://power.larc.nasa.gov/docs/services/api/temporal/daily/,NASA official,reviewed,2026-11-13
+MARU_NARC_JUST_2021,https://doi.org/10.15159/AR.20.236,peer reviewed NARC and JUST research,reviewed,2026-11-13
+MARU_IAEA_2005,https://www-pub.iaea.org/MTCD/Publications/PDF/te_1468_web.pdf,IAEA published Jordan research chapter,retrieved via search; full PDF download denied,2026-11-13
+FAO_WATER,https://www.fao.org/4/s2022e/s2022e02.htm,FAO official,reviewed,2026-11-13
+FAO_ROTATION,https://www.fao.org/4/Y5146E/y5146e0a.htm,FAO official,reviewed,2026-11-13
+NASA_WETNESS,https://gmao.gsfc.nasa.gov/gmao-products/merra-2/faq_merra-2/,NASA official,reviewed,2026-11-13
+OFFICIAL_CHALLENGE,https://www.spaceappschallenge.org/2026/challenges/field-shift-adapting-farms-with-nasa-data/,official challenge,official detail page fetch failed; indexed summary reviewed,2026-11-13
+LOCAL_CHALLENGE_COPY,https://hackathlone.com/challenges/adapting-farms-with-nasa-data,local organizer copy; secondary for challenge requirements,reviewed,2026-11-13
+SUBMISSION_NOTICE,https://github.com/nasa/spaceapps/discussions/1839,official organizing team notice,reviewed,2026-11-13

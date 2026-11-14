@@ -38,7 +38,7 @@ def main():
     )
     parser.add_argument(
         "--source-dir",
-        required=True,
+        default=str(Path(__file__).resolve().parent.parent / "data" / "source"),
         help="Folder containing the professor's NASA POWER CSV files."
     )
     args = parser.parse_args()

@@ -1,0 +1,19 @@
+﻿site_id,month,reported_T_mean_C,reported_rain_total_mm,source_id,source_locator,evidence_status
+MARU_PUBLISHED_POINT,2015-10,21.73,16,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2015-11,15.27,31.5,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2015-12,9.43,22.9,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2016-01,8.21,222,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2016-02,10.19,53.4,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2016-03,13.77,54,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2016-04,19.41,11,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2016-05,21.23,0,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2016-06,26.3,0,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2016-10,21.94,2,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2016-11,13.7,0.8,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2016-12,8.58,190,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2017-01,7.78,63.6,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2017-02,8.7,23.2,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2017-03,12.71,19.2,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2017-04,17.53,9.8,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2017-05,21.85,0.6,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table
+MARU_PUBLISHED_POINT,2017-06,26.7,0,MARU_NARC_JUST_2021,"Table 2, printed p15",published study-site weather; sensor metadata not supplied in table

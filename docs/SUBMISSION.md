@@ -30,6 +30,14 @@ The tool supports the farmer's decision. It does not make it.
 
 ## 4. Project details
 
+**What makes it different.** Crop-comparison tools exist, and most take satellite data as the truth. Ours starts by testing it:
+
+- *Checked against the ground.* NASA POWER read 2.4 °C too warm at Maru because its grid cell sits 440 m lower than the station. We corrected for elevation and cut the error by two thirds. Both NASA rainfall products miss about 22% of local rain, and the tool says so.
+- *Confidence on every score.* The farmer sees what satellites observed on the field and what is a regional estimate or a rule.
+- *The current rotation read from space.* Eleven years of imagery show no fallow season, so wheat–fallow is ruled out without asking the farmer.
+- *Testable.* A replay of 27 real seasons and a what-if simulator show when the ranking holds and when it does not.
+- *It ranks, it does not decide.* The order follows the farmer's priorities, and close calls are flagged.
+
 **What it does.** For each field, the app shows:
 
 - the rotation the field is using today, read from satellite vegetation history;

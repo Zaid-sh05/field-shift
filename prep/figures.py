@@ -1,6 +1,6 @@
 """Role 3: slide figures from the data files -> docs/figures/*.png
 
-Usage: python prep/figures.py --package PATH/TO/Maru_Jordan_FieldShift/data
+Usage: python prep/figures.py        (inputs default to data/source/)
 """
 import argparse
 import json
@@ -95,7 +95,7 @@ def drought():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--package", required=True, help="folder with 09_nasa_local_comparison.csv")
+    ap.add_argument("--package", default=str(DATA / "source"), help="folder with 09_nasa_local_comparison.csv")
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     for name, fig in [("ndvi_history", ndvi_history()), ("temperature_check", temperature_check(args.package)),

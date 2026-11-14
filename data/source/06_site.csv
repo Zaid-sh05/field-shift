@@ -1,0 +1,2 @@
+﻿site_id,name_ar,latitude,longitude,coordinate_source_id,coordinate_precision,published_site_elevation_m,nasa_response_elevation_m,elevation_difference_m,spatial_caution,site_type
+MARU_PUBLISHED_POINT,مرو / إربد - إحداثيات الدراسة المنشورة,32.55,35.85,MARU_NARC_JUST_2021,published to arc-minute; not surveyed farm boundary,589,148.86,440.14,NASA regional grid differs strongly in elevation; temperature/frost are regional indicators only,"published research-site reference, not current farmer plot"

@@ -10,6 +10,16 @@ On top of the comparison, the farmer can simulate a drier or warmer season and w
 
 The tool supports the farmer's judgment. It does not replace the farmer or local agricultural extension officers.
 
+## What makes it different
+
+Crop-comparison tools exist. Most take satellite data as the truth and hand back a recommendation. We did five things differently:
+
+1. **We checked NASA before trusting it.** Against the Maru ground station, NASA POWER read 2.4 °C too warm, because its grid cell sits 440 m lower. We corrected for elevation and cut the error by two thirds. We also found that both NASA rainfall products miss about 22% of local rain, and we say so on screen.
+2. **Every score carries a confidence level.** The farmer sees which numbers the satellites observed on the field and which are regional estimates or rules.
+3. **The current rotation comes from space.** Eleven years of imagery show no fallow season on any of the three fields, so the tool rules wheat–fallow out without asking, and asks the farmer only what satellites cannot see.
+4. **It can be tested, not just trusted.** The farmer can replay all 27 real seasons, including the 2024–25 drought, and simulate a drier or warmer season to see when the ranking stops being clear.
+5. **It ranks; it does not decide.** The order follows the farmer's own priorities, close calls are flagged, and the decision stays with the farmer and the extension officer.
+
 ## Why this matters
 
 - More than 90% of Jordan gets under 200 mm of rain a year, and renewable freshwater is about 61 m³ per person per year.
@@ -85,6 +95,7 @@ prep/                  Offline data scripts (Roles 2, 3, 4)
   export_web.py        Engine results for every field and scenario → web/src/data.json
   features.py          Anomalies, season classification, NDVI monthly profile (pure pandas, self-tested)
 data/                  Generated data files + fields.geojson
+data/source/           Inputs the prep scripts start from (NASA POWER daily, Maru station months)
 docs/                  Data contract, research notes
 requirements.txt       What the deployed app needs
 requirements-prep.txt  Extra packages for the prep scripts (Earth Engine etc.)
@@ -113,7 +124,9 @@ To regenerate the satellite data (Role 3):
 pip install -r requirements-prep.txt
 earthengine authenticate
 python prep/gee_export.py --project YOUR_GEE_PROJECT
-python prep/validate.py --package PATH/TO/Maru_data --project YOUR_GEE_PROJECT
+python prep/validate.py --project YOUR_GEE_PROJECT
+python prep/fetch_power.py     # NASA POWER climate per field, from data/source/
+python prep/figures.py         # slide figures
 python prep/features.py        # self-check: prints "ok"
 ```
 
