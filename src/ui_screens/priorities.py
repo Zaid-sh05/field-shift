@@ -17,7 +17,6 @@ def render(st, t, state, *, geojson=None):
     st.caption(t("preference_notice"))
     st.caption(t("importance_scale"))
     render_controls(st, t)
-    st.info(t("mapping_pending"))
     st.button(t("back_to_field"), key="priorities_back",
               on_click=lambda: update_state(st.session_state, screen="field"))
     st.button(t("continue_comparison"), key="priorities_continue",

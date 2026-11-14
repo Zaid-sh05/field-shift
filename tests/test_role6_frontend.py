@@ -114,9 +114,9 @@ if "fieldshift_ui" not in st.session_state:
     update_state(st.session_state, selected_field="maru_1", priorities=dict.fromkeys(CRITERIA, 3), screen="comparison")
 render_frontend(adapter=Adapter())
 '''
-        at = AppTest.from_string(code).run()
+        at = AppTest.from_string(code).run(timeout=30)
         self.assertEqual(at.subheader[0].value, translate("comparison", "ar"))
-        at.selectbox[0].set_value("en").run()
+        at.selectbox[0].set_value("en").run(timeout=30)
         self.assertEqual(len(at.exception), 0)
         self.assertEqual(at.subheader[0].value, translate("comparison", "en"))
         saved = at.session_state["fieldshift_ui"]
@@ -124,7 +124,7 @@ render_frontend(adapter=Adapter())
         self.assertEqual(saved["screen"], "comparison")
         self.assertEqual(saved["priorities"], dict.fromkeys(CRITERIA, 3))
         self.assertEqual(saved["language"], "en")
-        at.selectbox[0].set_value("ar").run()
+        at.selectbox[0].set_value("ar").run(timeout=30)
         self.assertEqual(at.session_state["fieldshift_ui"]["language"], "ar")
         self.assertEqual(at.subheader[0].value, translate("comparison", "ar"))
 
@@ -190,7 +190,7 @@ class DesignSystemTests(unittest.TestCase):
         at = AppTest.from_string("from src.ui import render_frontend\nrender_frontend()").run(timeout=30)
         expected = (ROOT / "styles/main.css").read_text(encoding="utf-8")
         for language in ("ar", "en", "ar"):
-            at.selectbox(key="fieldshift_language_selector").set_value(language).run()
+            at.selectbox(key="fieldshift_language_selector").set_value(language).run(timeout=30)
             injected = next(m.value for m in at.markdown if 'id="role6-design-system"' in m.value)
             self.assertIn(expected, injected)
             self.assertIn(f'dir="{"rtl" if language == "ar" else "ltr"}"', injected)

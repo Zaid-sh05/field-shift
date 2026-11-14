@@ -7,6 +7,7 @@ from pathlib import Path
 from src.ui import FileDataAdapter
 from src.ui_state import select_field, init_state, update_state, KEY, CRITERIA
 from src.ui_components.field_selector import valid_polygon, field_options, build_map
+from src.ui_i18n import translate
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -62,19 +63,20 @@ class FieldTests(unittest.TestCase):
         for fid in ("maru_1", "maru_2", "maru_3"):
             at = AppTest.from_string("from src.ui import render_frontend\nrender_frontend()").run(timeout=30)
             self.assertTrue(at.button(key="fieldshift_continue").disabled)
-            at.selectbox(key="fieldshift_field_selector").set_value(fid).run()
-            at.run()
+            at.selectbox(key="fieldshift_field_selector").set_value(fid).run(timeout=30)
+            at.run(timeout=30)
             self.assertEqual(at.session_state[KEY]["selected_field"], fid)
-            at.selectbox(key="fieldshift_language_selector").set_value("en").run()
+            at.selectbox(key="fieldshift_language_selector").set_value("en").run(timeout=30)
             self.assertEqual(at.session_state[KEY]["selected_field"], fid)
-            self.assertTrue(any(fid in text.value for text in at.text))
-            at.button(key="fieldshift_continue").click().run()
+            self.assertTrue(any(f"Maru field {fid[-1]}" in block.value for block in at.markdown))
+            self.assertEqual([m.label for m in at.metric][:3], [translate(k, "en") for k in ("ev_winter_crop", "ev_fallow", "ev_rain")])
+            at.button(key="fieldshift_continue").click().run(timeout=30)
             self.assertEqual(at.session_state[KEY]["screen"], "priorities")
             self.assertEqual(at.session_state[KEY]["selected_field"], fid)
             state = at.session_state[KEY].copy()
             state["screen"] = "field"
             at.session_state[KEY] = state
-            at.run()
+            at.run(timeout=30)
             self.assertEqual(at.selectbox(key="fieldshift_field_selector").value, fid)
             self.assertEqual(len(at.exception), 0)
 

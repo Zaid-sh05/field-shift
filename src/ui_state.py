@@ -3,7 +3,8 @@ from collections.abc import MutableMapping, Mapping
 from copy import deepcopy
 from math import isfinite
 
-CRITERIA = ("water", "bare", "soil", "risk", "income", "effort")
+# Must match src/scoring.py CRITERIA (checked in tests). "effort" was dropped: no data source for it.
+CRITERIA = ("water", "risk", "soil", "bare", "income")
 SCREENS = ("field", "priorities", "comparison")
 KEY = "fieldshift_ui"
 
@@ -34,11 +35,7 @@ def clean_preferences(values):
 
 
 def get_preferences(state: MutableMapping) -> dict:
-    """Return six raw 1–5 preferences, NOT MCDA weights.
-
-    Role 5 must approve mapping before anything is submitted to ScoringProvider.
-    No normalization or scoring is performed here.
-    """
+    """Return the farmer's raw 1–5 importance per criterion; src/scoring.py uses them as weights."""
     return init_state(state)["priorities"]
 
 
@@ -62,7 +59,7 @@ def update_state(state: MutableMapping, **changes) -> dict:
 def validate_weights(weights: Mapping, *, allow_unset=False) -> dict:
     """Transport validation only. No normalization or agricultural scoring."""
     if set(weights) != set(CRITERIA):
-        raise ValueError("All six scoring criteria must be explicit")
+        raise ValueError("Every scoring criterion must be explicit")
     for value in weights.values():
         if value is None and allow_unset:
             continue

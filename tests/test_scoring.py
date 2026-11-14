@@ -55,6 +55,10 @@ class ScoringTests(unittest.TestCase):
         self.assertTrue(result["close_call"])
         self.assertFalse(result["low_confidence_top"])
 
+    def test_interface_sliders_match_engine_criteria(self):
+        from src.ui_state import CRITERIA
+        self.assertEqual(CRITERIA, s.CRITERIA)
+
     def test_bad_weights_are_rejected(self):
         for bad in ({}, {**EQUAL, "effort": 3}, {**EQUAL, "water": -1}, {c: 0 for c in s.CRITERIA}, {**EQUAL, "water": True}):
             with self.assertRaises(ValueError):

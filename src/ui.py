@@ -202,6 +202,8 @@ def render_frontend(*, adapter: DataAdapter | None = None, preview=False) -> Non
     direction = "rtl" if state["language"] == "ar" else "ltr"
     st.markdown(f'<style id="role6-design-system">{css}</style><span class="fieldshift-direction" dir="{direction}" lang="{state["language"]}"></span>', unsafe_allow_html=True)
     t = lambda key: translate(key, state["language"])
+    st.title(t("app_title"))
+    st.caption(t("app_tagline"))
     st.selectbox(t("language"), ("ar", "en"), format_func=lambda code: {"ar": "العربية", "en": "English"}[code], key=widget_key, on_change=change_language)
     data = (adapter if adapter is not None else FileDataAdapter()).load_fields()
     if data.issues:
@@ -215,3 +217,5 @@ def render_frontend(*, adapter: DataAdapter | None = None, preview=False) -> Non
         priorities.render(st, t, state, geojson=data.geojson)
     else:
         comparison.render(st, t, state, preview=preview, data=data)
+    from .ui_components.evidence import render_trust
+    render_trust(st, t)

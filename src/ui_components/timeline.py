@@ -7,7 +7,7 @@ def render_placeholder(st, t, months):
     st.caption(t("timeline_pending"))
 
 
-def render_timeline(st, t, months=None, *, start_month=None, demo=False):
+def render_timeline(st, t, months=None, *, start_month=None, demo=False, legend=True):
     """No start date or crop schedule is inferred from a rotation sequence."""
     from html import escape
     from ..ui_mock import DEMO_LABEL
@@ -25,4 +25,5 @@ def render_timeline(st, t, months=None, *, start_month=None, demo=False):
         label = t(f"month_{(start_month - 1 + index) % 12 + 1}") if start_month else f'{t("month_slot")} {index + 1}'
         cells.append(f'<div class="fs-month"><strong>{escape(label)}</strong><br>{escape(str(value) if value else t("calendar_missing"))}</div>')
     st.markdown('<div class="fs-timeline">' + "".join(cells) + '</div>', unsafe_allow_html=True)
-    st.caption(t("timeline_legend"))
+    if legend:
+        st.caption(t("timeline_legend"))

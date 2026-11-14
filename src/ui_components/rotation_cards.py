@@ -22,6 +22,55 @@ def render_evidence(st, t, evidence=None):
             st.text(f'{t(key)}: {record.get(key) or t("not_available")}')
 
 
+CURRENT_KEYS = {True: "current_rotation", False: "not_current_rotation", None: "current_rotation_unknown"}
+
+
+def criterion_detail(t, criterion, values):
+    """One plain sentence with the numbers behind a criterion score."""
+    score = round(values["score"])
+    if criterion == "water":
+        pairs = " · ".join(t("water_pair").format(crop=t(f"crop_{crop}"), demand=values["demand_mm"][crop],
+                                                  rain=values["rain_mm"][crop]) for crop in sorted(values["demand_mm"]))
+        return t("detail_water").format(score=score, pairs=pairs)
+    if criterion == "risk":
+        return t("detail_risk").format(score=score, dry=values["dry_seasons"], n=values["seasons"])
+    if criterion == "soil":
+        mark = lambda ok: "✓" if ok else "✗"
+        return t("detail_soil").format(n=values["legume"] + values["no_repeat"], legume=mark(values["legume"]),
+                                       no_repeat=mark(values["no_repeat"]))
+    if criterion == "bare":
+        return t("detail_bare").format(months=values["green_months"])
+    return t("detail_income").format(harvests=values["harvests"], of=values["of"])
+
+
+def render_scored_cards(st, t, rotations, result, language):
+    """Cards ranked by the farmer's priorities. Every score shows its numbers, confidence and source."""
+    from .evidence import badge
+    by_id = {r["id"]: r for r in rotations}
+    name = lambda rid: by_id[rid].get(f"name_{language}") or rid
+    columns = st.columns(len(result["rotations"]))
+    for index, (column, scored) in enumerate(zip(columns, result["rotations"])):
+        rotation, criteria = by_id[scored["id"]], scored["criteria"]
+        with column, st.container(border=True, key=f"role6_card_rotation_{index}"):
+            st.caption(t("rank_n").format(n=index + 1))
+            st.markdown(f"### {name(scored['id'])}")
+            st.metric(t("score"), f"{scored['total']:.0f} / 100")
+            st.caption(t(CURRENT_KEYS[rotation.get("is_current")]))
+            ordered = sorted(criteria, key=lambda c: criteria[c]["score"])
+            st.text(t("strongest").format(a=t(f"priority_{ordered[-1]}"), b=t(f"priority_{ordered[0]}")))
+            for criterion, values in criteria.items():
+                st.progress(values["score"] / 100, text=f"{t('priority_' + criterion)}: {values['score']:.0f}")
+                st.caption(f"{criterion_detail(t, criterion, values)} {badge(t, values['confidence'])}")
+            with st.expander(t("sources")):
+                for criterion in criteria:
+                    st.caption(f"{t('priority_' + criterion)}: {t('source_' + criterion)}")
+    st.success(t("top_by_priorities").format(name=name(result["rotations"][0]["id"])))
+    if result["close_call"]:
+        st.warning(t("close_call"))
+    if result["low_confidence_top"]:
+        st.warning(t("low_conf_top"))
+
+
 def render_cards(st, t, rotations, language, *, demo=False):
     """Presentation dictionaries are internal UI models, not a scoring contract."""
     from ..ui_mock import DEMO_LABEL

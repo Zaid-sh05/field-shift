@@ -40,9 +40,9 @@ class ComparisonTests(unittest.TestCase):
         self.assertTrue(all(html.count('class="fs-month"') == 12 for html in timelines))
         self.assertIn(translate("month_1", "ar"), timelines[0])
         before = at.session_state[KEY].copy()
-        at.selectbox(key="fieldshift_language_selector").set_value("en").run()
+        at.selectbox(key="fieldshift_language_selector").set_value("en").run(timeout=30)
         self.assertTrue(any("January" in m.value for m in at.markdown))
-        at.button(key="comparison_back").click().run()
+        at.button(key="comparison_back").click().run(timeout=30)
         self.assertEqual(at.session_state[KEY]["screen"], "priorities")
         self.assertEqual(at.session_state[KEY]["selected_field"], before["selected_field"])
         self.assertEqual(at.session_state[KEY]["priorities"], before["priorities"])
@@ -52,7 +52,8 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual(len(at.exception), 0)
         # The three real Role 4 rotations render (not placeholders, not demo fixtures).
         self.assertEqual(sum(x.value == translate("awaiting_rotation") for x in at.text), 0)
-        self.assertTrue({"WW", "WL", "WF"} <= {x.value for x in at.text})
+        self.assertEqual(sum(" / 100" in x.value for x in at.metric), 3)  # one scored card per rotation
+        self.assertEqual(len(at.exception), 0)
         self.assertTrue(any(x.value == translate("not_current_rotation") for x in at.caption))
         self.assertTrue(any("530.22 m" in x.value for x in at.text))
         self.assertTrue(any("3.68°" in x.value for x in at.text))
@@ -60,7 +61,10 @@ class ComparisonTests(unittest.TestCase):
         self.assertFalse(any("demo_rotation_" in x.value for x in at.text))
         timeline = next(m.value for m in at.markdown if 'class="fs-timeline"' in m.value)
         self.assertEqual(timeline.count('class="fs-month"'), 12)
-        self.assertNotIn(translate("month_1"), timeline)
+        # Real calendar from the crop table: starts in October (bare), wheat from November.
+        self.assertTrue(timeline.index(translate("month_10")) < timeline.index(translate("month_11")))
+        self.assertIn(translate("bare_soil"), timeline)
+        self.assertIn(translate("crop_WHEAT"), timeline)
 
     def test_supplied_contract_rotation_without_fabricated_scores(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -143,7 +147,7 @@ from src.ui import render_frontend
 from src.ui_state import update_state
 update_state(st.session_state, screen="comparison", selected_field="invalid")
 render_frontend(preview=True)
-''').run()
+''').run(timeout=30)
         self.assertEqual(len(at.exception), 0)
         self.assertFalse(any(DEMO_LABEL in x.value for x in at.warning))
         self.assertEqual(at.button[0].key, "comparison_field_back")
