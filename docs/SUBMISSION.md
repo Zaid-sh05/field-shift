@@ -1,0 +1,119 @@
+# Submission drafts (NASA Space Apps 2026)
+
+Drafts for the submission page. Items marked **[TEAM]** need a teammate to confirm before we paste them.
+Deadline: **Sunday 15 Nov 2026, 11:59 PM**.
+
+---
+
+## 1. High-level summary
+
+Field Shift is an Arabic-first crop-rotation explorer for rainfed farms around Maru, Irbid, in northern Jordan, one of the most water-scarce countries on Earth. A farmer picks their field, sets what matters to them, and compares three rotations side by side (wheat–wheat, wheat–lentil, wheat–fallow) against what the field is already doing.
+
+The current rotation is not guessed: 11 years of NASA HLS satellite imagery show that our three study fields were never left fallow: in 31 of 33 field-seasons since 2015 they carried a clear winter crop, and the other 2 were borderline green, never bare. Every number the farmer sees carries a confidence badge, because we tested NASA data against the ground before trusting it. Near Maru, NASA POWER temperatures ran 2.4 °C too warm because its grid cell sits 440 m lower than the farm. We corrected for elevation and cut the error by two thirds. Satellite rainfall still misses about 22% of local rain, so the tool says so.
+
+The tool supports the farmer's decision. It does not make it.
+
+## 2. Project demo
+
+**[TEAM]** Link to the 7-slide deck (Kosay, Mohammad). Figures ready to use in `docs/figures/`:
+
+- `ndvi_history.png`: 11 years of NDVI for the three fields (no fallow year)
+- `temperature_check.png`: station vs NASA POWER, raw and elevation-corrected
+- `rain_check.png`: station vs NASA POWER vs GPM IMERG rainfall
+
+## 3. Final project link
+
+- Live app: https://field-shift-maru.streamlit.app
+- Code and data: https://github.com/Zaid-sh05/field-shift
+
+## 4. Project details
+
+**What it does.** For each field, the app shows:
+
+- the rotation the field is using today, read from satellite vegetation history;
+- three alternative rotations scored on the farmer's own priorities **[TEAM: Lana to confirm the final criteria]**;
+- a plain-language explanation for each option;
+- a 12-month bare-soil timeline;
+- a confidence badge on every number: high for field-scale satellite data, medium for regional data checked against the ground, low for assumptions and reference values.
+
+**How it works.**
+
+1. *Fields.* We drew three real rainfed fields near Maru (5–8 ha each) over satellite imagery, inside the field and away from roads, houses and olive groves.
+2. *Satellite data (Google Earth Engine).* For every field we extract monthly series for 2015–2025:
+   - HLS (Landsat 8/9 and Sentinel-2) cloud-masked NDVI at 30 m;
+   - SMAP L4 root-zone soil moisture;
+   - GPM IMERG rainfall;
+   - GRACE/GRACE-FO water storage;
+   - SRTM elevation and slope.
+3. *Climate (NASA POWER).* We use 28 years of daily weather and correct temperature for each field's real elevation from SRTM. From that we derive frost days, heat days, dry spells and water-balance inputs.
+4. *Ground check.* We compare NASA data with 18 months of published weather from the Maru research station (NARC/JUST):
+   - Temperature error drops from 2.37 °C to 0.56–0.96 °C after the elevation correction. The range covers any lapse rate from 5 to 7 °C/km, so the result does not hinge on one tuned number.
+   - NASA POWER and IMERG both under-count rain by about 22%.
+5. *Season reading.* A rule-based classifier labels each field-season from NDVI as winter crop, irrigated summer, fallow or uncertain. NDVI cannot tell wheat from lentil, so the farmer confirms the crop.
+6. *Scoring.* **[TEAM: Lana]** A transparent multi-criteria score, weighted by the farmer's priorities, with a "close call" flag when the ranking flips under small weight changes.
+7. *Interface.* **[TEAM: Mohammad]** Streamlit, Arabic right-to-left. The app reads prepared files only, so it keeps working on weak internet.
+
+**Tools.** Python, Google Earth Engine, pandas, Streamlit, folium, Plotly, matplotlib, GitHub, Streamlit Community Cloud.
+
+**Goals.**
+
+- Give smallholders a fair comparison of rotations using free NASA data.
+- Be honest about how far each number can be trusted.
+- Show a method that any extension office could repeat for another village.
+
+**Limits we state openly.**
+
+- One site and three fields.
+- An 18-month ground check, which is a check, not a calibration.
+- No field-level soil measurements: we show the published Maru profile as a low-confidence reference.
+- Heat days are not yet verified against local maximum temperatures.
+
+## 5. Use of NASA data and AI
+
+### NASA data
+
+| Dataset | Earth Engine / API ID | Used for |
+|---|---|---|
+| HLS Landsat 30 m (HLSL30 v2.0) | `NASA/HLS/HLSL30/v002` | NDVI, crop history, bare-soil months |
+| HLS Sentinel-2 30 m (HLSS30 v2.0) | `NASA/HLS/HLSS30/v002` | NDVI, crop history, bare-soil months |
+| SMAP L4 soil moisture | `NASA/SMAP/SPL4SMGP/008` | Root-zone moisture context |
+| GPM IMERG V07 monthly | `NASA/GPM_L3/IMERG_MONTHLY_V07` | Rainfall, cross-check with POWER and station |
+| GRACE/GRACE-FO mascons (JPL) | `NASA/GRACE/MASS_GRIDS_V04/MASCON` | Regional water-storage trend |
+| SRTM 30 m | `USGS/SRTMGL1_003` | Field elevation (temperature correction), slope |
+| NASA POWER (Agroclimatology) | power.larc.nasa.gov API | Daily temperature, rain, radiation, humidity, wind, soil wetness, 1998–2025 |
+
+### AI
+
+- **Claude (Anthropic)** helped with research and preparation, with writing and reviewing data-processing code, with analysis (the elevation check, validation and figures), and with drafting documentation. The team reviewed and ran all code.
+- **ChatGPT / Codex (OpenAI)** helped a teammate assemble the Maru data package from published sources.
+- **[TEAM: Lana]** In the app, an LLM writes plain-language explanations from scores the engine has already computed. It never chooses the recommended rotation. Name the model here.
+- No AI-generated data is presented as measurement. Every number traces to a NASA dataset or a cited publication.
+
+## 6. References
+
+**NASA and satellite data**
+
+- NASA POWER API, Agroclimatology community. https://power.larc.nasa.gov/docs/services/api/
+- Harmonized Landsat Sentinel-2 (HLS) v2.0, NASA LP DAAC. https://lpdaac.usgs.gov/products/hlsl30v002/ and https://lpdaac.usgs.gov/products/hlss30v002/
+- SMAP L4 Global 3-hourly Surface and Root Zone Soil Moisture (SPL4SMGP v8), NASA NSIDC DAAC. https://nsidc.org/data/spl4smgp
+- GPM IMERG Final Run V07, NASA GES DISC. https://gpm.nasa.gov/data/imerg
+- GRACE/GRACE-FO JPL mascons RL06. https://grace.jpl.nasa.gov/
+- NASA SRTM Version 3 (SRTMGL1). https://lpdaac.usgs.gov/products/srtmgl1v003/
+- MERRA-2 FAQ (soil wetness in POWER). https://gmao.gsfc.nasa.gov/gmao-products/merra-2/faq_merra-2/
+
+**Other data and tools**
+
+- ECMWF ERA5-Land daily aggregates (used only to cross-check heat days). `ECMWF/ERA5_LAND/DAILY_AGGR`
+- Google Earth Engine. https://earthengine.google.com/
+
+**Local and agronomic sources**
+
+- Maru station weather and soil, NARC/JUST study. https://doi.org/10.15159/AR.20.236
+- Maru rotation trials (wheat–wheat, wheat–lentil, wheat–fallow), IAEA TECDOC-1468. https://www-pub.iaea.org/MTCD/Publications/PDF/te_1468_web.pdf
+- FAO Irrigation and Drainage Paper 56, crop coefficients. https://www.fao.org/4/x0490e/x0490e0b.htm
+- FAO crop water needs. https://www.fao.org/4/s2022e/s2022e02.htm
+- FAO crop rotation guidance. https://www.fao.org/4/Y5146E/y5146e0a.htm
+
+**Challenge**
+
+- Space Apps 2026, Field Shift: Adapting Farms with NASA Data. https://www.spaceappschallenge.org/2026/challenges/field-shift-adapting-farms-with-nasa-data/

@@ -30,7 +30,7 @@ def ndvi_history():
     ax.text(s.date.min(), 0.415, "crop (NDVI ≥ 0.40)", color="#264653", fontsize=10)
     ax.text(s.date.min(), 0.20, "bare soil (< 0.25)", color="#8d6e63", fontsize=10)
     ax.set_ylabel("NDVI (HLS, 30 m, monthly median)")
-    ax.set_title("A green winter crop on every field, every season, 2015-2025: no fallow year", loc="left")
+    ax.set_title("33 field-seasons, 2015-2025: 31 clear winter crops, 2 borderline, 0 fallow", loc="left")
     ax.legend(frameon=False, ncol=3, loc="upper right")
     return fig
 

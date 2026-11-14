@@ -22,7 +22,7 @@ Following our mentor's advice to go deep on one area with local data, we focus o
 
 What the data showed:
 
-- **No fallow season in 11 years.** HLS NDVI shows a green winter crop on all three fields in every season from 2015 to 2025. The current practice is continuous winter cropping, which is the baseline we compare against. (NDVI cannot tell wheat from lentil, so the farmer confirms the crop.)
+- **No fallow season in 11 years.** HLS NDVI shows a clear winter crop in 31 of 33 field-seasons from 2015 to 2025; the other 2 are borderline green, and none is bare. The current practice is continuous winter cropping, which is the baseline we compare against. (NDVI cannot tell wheat from lentil, so the farmer confirms the crop.)
 - **NASA temperature runs hot here, and we know why.** The NASA POWER grid cell sits at 149 m; the Maru station is at 589 m. Against 18 months of published station data, the mean-temperature error is 2.37 °C raw and 0.56–0.96 °C after a standard lapse-rate correction (5–7 °C/km). The result holds across the whole range, so it does not depend on one tuned number.
 - **Both satellite rainfall products under-count.** NASA POWER and GPM IMERG each show about 22% less rain than the station over the same months, so rainfall is shown with medium confidence.
 
