@@ -80,6 +80,10 @@ class AdapterTests(unittest.TestCase):
         catalog = json.loads((ROOT / "i18n.json").read_text(encoding="utf-8"))
         self.assertEqual(set(catalog["ar"]), set(catalog["en"]))
         self.assertEqual(translate("missing"), "missing")
+        self.assertEqual(translate("field", "ar", catalog={"ar": {}, "en": {"field": "Field"}}), "Field")
+        for malformed in (None, [], {"ar": None, "en": []}, {"ar": {"field": 12}}):
+            if malformed is not None:
+                self.assertEqual(translate("field", "ar", catalog=malformed), "field")
 
     def test_imports_without_site_packages(self):
         # -S disables site-packages: UI imports must not require Streamlit/Folium.
@@ -92,6 +96,32 @@ class AdapterTests(unittest.TestCase):
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_language_switch_preserves_state(self):
+        from streamlit.testing.v1 import AppTest
+        code = '''import streamlit as st
+from src.ui import render_frontend, FieldData
+from src.ui_state import update_state, CRITERIA
+class Adapter:
+    def load_fields(self):
+        return FieldData({"type": "FeatureCollection", "features": []})
+if "fieldshift_ui" not in st.session_state:
+    update_state(st.session_state, selected_field="maru_1", priorities=dict.fromkeys(CRITERIA, 3), screen="comparison")
+render_frontend(adapter=Adapter())
+'''
+        at = AppTest.from_string(code).run()
+        self.assertEqual(at.subheader[0].value, translate("comparison", "ar"))
+        at.selectbox[0].set_value("en").run()
+        self.assertEqual(len(at.exception), 0)
+        self.assertEqual(at.subheader[0].value, translate("comparison", "en"))
+        saved = at.session_state["fieldshift_ui"]
+        self.assertEqual(saved["selected_field"], "maru_1")
+        self.assertEqual(saved["screen"], "comparison")
+        self.assertEqual(saved["priorities"], dict.fromkeys(CRITERIA, 3))
+        self.assertEqual(saved["language"], "en")
+        at.selectbox[0].set_value("ar").run()
+        self.assertEqual(at.session_state["fieldshift_ui"]["language"], "ar")
+        self.assertEqual(at.subheader[0].value, translate("comparison", "ar"))
+
     def test_screen_shells_with_missing_data(self):
         from streamlit.testing.v1 import AppTest
         with tempfile.TemporaryDirectory() as folder:

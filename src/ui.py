@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
-from .ui_state import init_state, validate_weights
+from .ui_state import init_state, update_state, validate_weights
 from .ui_i18n import translate
 
 
@@ -94,10 +94,29 @@ def render_frontend(*, adapter: DataAdapter | None = None, preview=False) -> Non
         raise RuntimeError("Streamlit is required to render the frontend") from exc
     from .ui_screens import field, priorities, comparison
     state = init_state(st.session_state)
+    widget_key = "fieldshift_language_selector"
+    # Keep the widget in sync when an integrator updates the shared state.
+    if st.session_state.get(widget_key) != state["language"]:
+        st.session_state[widget_key] = state["language"]
+
+    def change_language():
+        update_state(st.session_state, language=st.session_state[widget_key])
+
+    css_path = Path(__file__).resolve().parents[1] / "styles" / "main.css"
+    try:
+        css = css_path.read_text(encoding="utf-8")
+    except OSError:
+        css = ""
+    direction = "rtl" if state["language"] == "ar" else "ltr"
+    st.markdown(f'<style>{css}</style><span class="fieldshift-direction" dir="{direction}" lang="{state["language"]}"></span>', unsafe_allow_html=True)
     t = lambda key: translate(key, state["language"])
+    st.selectbox(t("language"), ("ar", "en"), format_func=lambda code: {"ar": "العربية", "en": "English"}[code], key=widget_key, on_change=change_language)
     data = (adapter if adapter is not None else FileDataAdapter()).load_fields()
-    for issue in data.issues:
-        st.warning(issue)
+    if data.issues:
+        st.warning(t("data_warning"))
+        with st.expander(t("data_details")):
+            for issue in data.issues:
+                st.write(issue)
     if state["screen"] == "field":
         field.render(st, t, data.geojson, state)
     elif state["screen"] == "priorities":

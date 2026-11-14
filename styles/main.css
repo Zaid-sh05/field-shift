@@ -1,1 +1,55 @@
-/* Phase 1 stylesheet boundary. Visual implementation belongs to Phase 2. */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+/* Applied only when render_frontend inserts the direction marker. */
+body:has(.fieldshift-direction) {
+    --fs-green: #245b3d;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    color: #1c3024;
+}
+body:has(.fieldshift-direction) .stApp {
+    background: #f6f8f3;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+}
+body:has(.fieldshift-direction) h1,
+body:has(.fieldshift-direction) h2,
+body:has(.fieldshift-direction) h3,
+body:has(.fieldshift-direction) button,
+body:has(.fieldshift-direction) input,
+body:has(.fieldshift-direction) [data-testid="stMarkdownContainer"] {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+}
+body:has(.fieldshift-direction) h1,
+body:has(.fieldshift-direction) h2,
+body:has(.fieldshift-direction) h3 { color: var(--fs-green); }
+body:has(.fieldshift-direction[dir="rtl"]) .block-container,
+body:has(.fieldshift-direction[dir="rtl"]) [data-testid="stSidebar"] {
+    direction: rtl;
+    text-align: right;
+}
+body:has(.fieldshift-direction[dir="ltr"]) .block-container,
+body:has(.fieldshift-direction[dir="ltr"]) [data-testid="stSidebar"] {
+    direction: ltr;
+    text-align: left;
+}
+body:has(.fieldshift-direction) .block-container {
+    max-width: 1200px;
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}
+body:has(.fieldshift-direction) [data-testid="stAlert"] {
+    border-radius: 0.65rem;
+    border-inline-start: 4px solid var(--fs-green);
+}
+body:has(.fieldshift-direction) :focus-visible {
+    outline: 3px solid #ad7412;
+    outline-offset: 2px;
+}
+@media (max-width: 640px) {
+    body:has(.fieldshift-direction) .block-container {
+        padding-inline: 1rem;
+        padding-top: 1rem;
+    }
+    body:has(.fieldshift-direction) [data-testid="stHorizontalBlock"] {
+        flex-wrap: wrap;
+    }
+}

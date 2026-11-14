@@ -1,5 +1,8 @@
 {
   "ar": {
+    "language": "اللغة",
+    "data_warning": "توجد ملاحظات على بيانات الحقول.",
+    "data_details": "تفاصيل البيانات",
     "field": "اختيار المزرعة",
     "priorities": "أولويات المزارع",
     "comparison": "مقارنة الدورات الزراعية",
@@ -11,6 +14,9 @@
     "timeline_pending": "مكان خط زمني من 12 شهرًا — البيانات غير متاحة."
   },
   "en": {
+    "language": "Language",
+    "data_warning": "There are issues with field data.",
+    "data_details": "Data details",
     "field": "Farm Selection",
     "priorities": "Farmer Priorities",
     "comparison": "Rotation Comparison",

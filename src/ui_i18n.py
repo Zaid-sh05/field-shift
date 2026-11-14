@@ -13,4 +13,12 @@ def translate(key: str, language="ar", *, catalog=None) -> str:
             catalog = json.loads(CATALOG.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             catalog = {}
-    return catalog.get(language, {}).get(key, catalog.get("en", {}).get(key, key))
+    if not isinstance(catalog, dict):
+        return key
+    for locale in (language, "en"):
+        section = catalog.get(locale)
+        if isinstance(section, dict):
+            value = section.get(key)
+            if isinstance(value, str) and value:
+                return value
+    return key
