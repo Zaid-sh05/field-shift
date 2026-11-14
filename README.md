@@ -82,7 +82,7 @@ python prep/features.py        # self-check: prints "ok"
 |---|---|---|
 | 1. Integration and deployment | Zaid | Repo, `app.py` wiring, deployment, submission page |
 | 2. Climate data | Sadeel | NASA POWER, IMERG, frost/heat/ET0 indicators |
-| 3. Satellite data | Zaid | HLS NDVI, SMAP, GRACE, SRTM, season classification |
+| 3. Satellite data | Dr. Hossam | HLS NDVI, SMAP, GRACE, SRTM, season classification |
 | 4. Agronomy and story | Kosay | Crop table, soil, field choice, rotations, video |
 | 5. Scoring and AI | Lana | Multi-criteria scoring, confidence, LLM explanations |
 | 6. Interface | Mohammad | Streamlit UI, Arabic RTL, cards and timeline |
