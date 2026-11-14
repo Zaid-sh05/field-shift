@@ -33,3 +33,11 @@ All roles write to and read from `data/`. These names and columns are fixed. If 
 | `sm_rootzone` | SMAP L4 `sm_rootzone`, monthly mean | m³/m³ | 9000 |
 | `precip_imerg_mm` | GPM IMERG V07 monthly, rate × hours in month | mm/month | 11132 |
 | `tws_cm` | GRACE mascon `lwe_thickness`, monthly | cm water equivalent | 300000 |
+
+## Heat and frost in `climate_monthly.csv`
+
+| variable | meaning | confidence |
+|---|---|---|
+| `heat_days` | days with elevation-corrected POWER Tmax > 35 °C | **low**: POWER Tmax runs hot here (~82 days a year vs ~46 in ERA5-Land); only mean temperature was checked against the station |
+| `hot_days_p90` | days above the site's own 90th percentile of daily Tmax (39.6 °C raw POWER, 1998–2025) | medium: relative to local history, so a constant bias cancels; use this for heat risk |
+| `frost_days` | days with elevation-corrected POWER Tmin < 0 °C | low: not checked against local Tmin |

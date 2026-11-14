@@ -53,8 +53,14 @@ def main():
     daily_rows = read_csv(daily_path)
     monthly_rows = read_csv(monthly_path)
 
+    # POWER Tmax runs hot at Maru (ERA5-Land: ~46 days >35 C a year vs ~82 here), so also count days
+    # above the site's own 90th percentile of Tmax. A constant correction cannot change this count.
+    all_tmax = sorted(v for v in (number(r.get("T2M_MAX")) for r in daily_rows) if v is not None)
+    tmax_p90 = all_tmax[int(0.9 * (len(all_tmax) - 1))]
+
     # Calculate daily heat and frost counts after elevation correction.
     daily_counts = defaultdict(lambda: {
+        "hot_p90": 0,
         "heat_days": 0,
         "frost_days": 0,
         "valid_max": 0,
@@ -76,6 +82,8 @@ def main():
 
             if tmax is not None:
                 counts["valid_max"] += 1
+                if tmax > tmax_p90:
+                    counts["hot_p90"] += 1
                 if tmax - correction > 35:
                     counts["heat_days"] += 1
 
@@ -145,6 +153,12 @@ def main():
                 "variable": "frost_days",
                 "value": frost,
             })
+            records.append({
+                "field_id": field_id,
+                "month": month,
+                "variable": "hot_days_p90",
+                "value": counts["hot_p90"] if counts["valid_max"] > 0 else None,
+            })
 
     # Calculate z-score against the same calendar month across years.
     groups = defaultdict(list)
@@ -208,6 +222,7 @@ def main():
     print(f"Monthly source rows: {len(monthly_rows)}")
     print(f"Output rows: {len(records)}")
     print(f"Elevation correction rate: {LAPSE_RATE_C_PER_KM} C/km")
+    print(f"Hot-day threshold (site Tmax 90th percentile, raw POWER): {tmax_p90:.1f} C")
 
 
 if __name__ == "__main__":
