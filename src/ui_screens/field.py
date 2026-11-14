@@ -18,8 +18,19 @@ def render(st, t, geojson, state, *, static=None):
     if st.session_state.get(key) != selected:
         st.session_state[key] = selected
 
-    def changed():
-        select_field(st.session_state, st.session_state[key], options)
+    
+def changed():
+    field_id = st.session_state.get(key)
+
+    print("SELECTED ID:", repr(field_id))
+    print("VALID IDS:", [repr(x) for x in options.keys()])
+    print("SELECTED TYPE:", type(field_id))
+    print("VALID ID TYPES:", [type(x) for x in options.keys()])
+
+    select_field(st.session_state, field_id, options)
+
+
+    select_field(st.session_state, field_id, options)
 
     st.selectbox(t("choose_field"), [None, *options], format_func=lambda fid: options.get(fid, t("select_field")), key=key, on_change=changed)
     st.caption(t("geometry_source"))
