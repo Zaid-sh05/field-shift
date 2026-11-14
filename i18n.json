@@ -1,0 +1,24 @@
+{
+  "ar": {
+    "field": "اختيار المزرعة",
+    "priorities": "أولويات المزارع",
+    "comparison": "مقارنة الدورات الزراعية",
+    "no_fields": "بيانات الحقول غير متاحة.",
+    "select_field": "لم يتم اختيار حقل بعد.",
+    "mapping_pending": "ربط الأولويات بمعايير التقييم الستة ينتظر اعتماد Role 5.",
+    "scoring_pending": "نتائج التقييم غير متاحة بعد.",
+    "result_pending": "مكان بطاقة نتيجة — لا توجد نتيجة محسوبة.",
+    "timeline_pending": "مكان خط زمني من 12 شهرًا — البيانات غير متاحة."
+  },
+  "en": {
+    "field": "Farm Selection",
+    "priorities": "Farmer Priorities",
+    "comparison": "Rotation Comparison",
+    "no_fields": "Field data is unavailable.",
+    "select_field": "No field has been selected yet.",
+    "mapping_pending": "Mapping priorities to all six criteria awaits Role 5 approval.",
+    "scoring_pending": "Scoring results are not available yet.",
+    "result_pending": "Result card placeholder — no computed result.",
+    "timeline_pending": "Twelve-month timeline placeholder — data unavailable."
+  }
+}
