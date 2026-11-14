@@ -81,11 +81,11 @@ python prep/features.py        # self-check: prints "ok"
 | Role | Owner | Owns |
 |---|---|---|
 | 1. Integration and deployment | Zaid | Repo, `app.py` wiring, deployment, submission page |
-| 2. Climate data | TBD | NASA POWER, IMERG, frost/heat/ET0 indicators |
+| 2. Climate data | Sadeel | NASA POWER, IMERG, frost/heat/ET0 indicators |
 | 3. Satellite data | Zaid | HLS NDVI, SMAP, GRACE, SRTM, season classification |
-| 4. Agronomy and story | TBD | Crop table, soil, field choice, rotations, video |
-| 5. Scoring and AI | TBD | Multi-criteria scoring, confidence, LLM explanations |
-| 6. Interface | TBD | Streamlit UI, Arabic RTL, cards and timeline |
+| 4. Agronomy and story | Kosay | Crop table, soil, field choice, rotations, video |
+| 5. Scoring and AI | Lana | Multi-criteria scoring, confidence, LLM explanations |
+| 6. Interface | Mohammad | Streamlit UI, Arabic RTL, cards and timeline |
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for how we work.
 
