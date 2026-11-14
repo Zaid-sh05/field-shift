@@ -1,21 +1,21 @@
 {
   "type": "FeatureCollection",
-  "_note": "PLACEHOLDER polygons (~200 m squares) so Roles 2 and 3 can test. Role 4 replaces them with real fields drawn on geojson.io (each > 1 ha, away from buildings).",
+  "_note": "Three rainfed fields near Maru, Irbid, drawn on geojson.io over satellite imagery on 2026-11-14 (inside the field, away from roads, houses and olive groves). Land use per season comes from HLS NDVI, not from the drawing.",
   "features": [
     {
       "type": "Feature",
-      "properties": {"field_id": "valley_deir_alla", "name_ar": "دير علا - وادي الأردن", "name_en": "Deir Alla, Jordan Valley", "zone": "valley", "rain_mm": 280},
-      "geometry": {"type": "Polygon", "coordinates": [[[35.618, 32.198], [35.620, 32.198], [35.620, 32.200], [35.618, 32.200], [35.618, 32.198]]]}
+      "properties": {"field_id": "maru_1", "name_ar": "حقل مرو 1", "name_en": "Maru field 1", "zone": "maru", "rain_mm": null},
+      "geometry": {"type": "Polygon", "coordinates": [[[35.8824442, 32.6199886], [35.8803188, 32.6199886], [35.8803188, 32.6172323], [35.8824442, 32.6172323], [35.8824442, 32.6199886]]]}
     },
     {
       "type": "Feature",
-      "properties": {"field_id": "highland_ramtha", "name_ar": "سهول الرمثا - المرتفعات الشمالية", "name_en": "Ramtha plains, northern highlands", "zone": "highland", "rain_mm": 250},
-      "geometry": {"type": "Polygon", "coordinates": [[[35.990, 32.540], [35.992, 32.540], [35.992, 32.542], [35.990, 32.542], [35.990, 32.540]]]}
+      "properties": {"field_id": "maru_2", "name_ar": "حقل مرو 2", "name_en": "Maru field 2", "zone": "maru", "rain_mm": null},
+      "geometry": {"type": "Polygon", "coordinates": [[[35.8946074, 32.6223259], [35.8972535, 32.6223259], [35.8972535, 32.6205044], [35.8946074, 32.6205044], [35.8946074, 32.6223259]]]}
     },
     {
       "type": "Feature",
-      "properties": {"field_id": "azraq_farm", "name_ar": "مزرعة الأزرق", "name_en": "Azraq farm", "zone": "azraq", "rain_mm": 60},
-      "geometry": {"type": "Polygon", "coordinates": [[[36.800, 31.860], [36.802, 31.860], [36.802, 31.862], [36.800, 31.862], [36.800, 31.860]]]}
+      "properties": {"field_id": "maru_3", "name_ar": "حقل مرو 3", "name_en": "Maru field 3", "zone": "maru", "rain_mm": null},
+      "geometry": {"type": "Polygon", "coordinates": [[[35.8890143, 32.6178483], [35.8928891, 32.6178483], [35.8928891, 32.6157620], [35.8890143, 32.6157620], [35.8890143, 32.6178483]]]}
     }
   ]
 }

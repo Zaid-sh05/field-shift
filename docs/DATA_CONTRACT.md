@@ -8,7 +8,7 @@ All roles write to and read from `data/`. These names and columns are fixed. If 
 | `climate_monthly.csv` | Role 2 | `field_id, month (YYYY-MM), variable, value, anomaly` |
 | `sat_monthly.csv` | Role 3 | `field_id, month (YYYY-MM), variable, value, anomaly, native_res_m` |
 | `field_static.csv` | Role 3 | `field_id, elevation_m, slope_deg` |
-| `field_history.csv` | Role 3 | `field_id, season, winter_max, summer_max, ndvi_max, class` (`cereal` \| `irrigated_summer` \| `fallow` \| `uncertain`) |
+| `field_history.csv` | Role 3 | `field_id, season, winter_max, summer_max, ndvi_max, class` (`winter_crop` \| `irrigated_summer` \| `fallow` \| `uncertain`; NDVI cannot separate wheat from lentil; seasons without Feb–Apr data are omitted) |
 | `crops.csv` | Role 4 | `crop, family, legume, kc_mid, kc_end, season_days, sow_month, min_rain_mm, frost_sens, heat_c, income_level, source_url` |
 | `soil.json` | Role 4 | `{field_id: {clay_pct, sand_pct, soc_gkg, ph, awc_mm, q05, q95}}` |
 | `rotations.json` | Role 4 | `{field_id: [{id, name_ar, name_en, sequence: [crop, ...], is_current}]}` |

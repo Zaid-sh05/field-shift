@@ -10,6 +10,7 @@ Usage:
 """
 import argparse
 import json
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import ee
@@ -34,28 +35,33 @@ def _ndvi(nir_band):
     return f
 
 
-def hls_ndvi():
+def hls_ndvi(region):
     # NIR band differs: B5 on Landsat (L30), B8A on Sentinel-2 (S30). Mixing them up gives wrong NDVI silently.
-    l30 = ee.ImageCollection("NASA/HLS/HLSL30/v002").map(_mask_hls).map(_ndvi("B5"))
-    s30 = ee.ImageCollection("NASA/HLS/HLSS30/v002").map(_mask_hls).map(_ndvi("B8A"))
+    # filterBounds BEFORE map: otherwise Earth Engine processes every HLS scene on Earth and times out.
+    l30 = ee.ImageCollection("NASA/HLS/HLSL30/v002").filterBounds(region).map(_mask_hls).map(_ndvi("B5"))
+    s30 = ee.ImageCollection("NASA/HLS/HLSS30/v002").filterBounds(region).map(_mask_hls).map(_ndvi("B8A"))
     return l30.merge(s30)
 
 
-# variable -> (collection factory, monthly composite, reduce scale m, native res m, sample at centroid?)
+# variable -> (collection factory, monthly composite, reduce scale m, native res m, sample at centroid?, months per request)
+# SMAP L4 is 3-hourly and global: more than one month per request exceeds the Earth Engine memory limit.
 PRODUCTS = {
-    "ndvi": (hls_ndvi, "median", 30, 30, False),
-    "sm_rootzone": (lambda: ee.ImageCollection("NASA/SMAP/SPL4SMGP/008").select(["sm_rootzone"], ["value"]),
-                    "mean", 9000, 9000, True),
-    "tws_cm": (lambda: ee.ImageCollection("NASA/GRACE/MASS_GRIDS_V04/MASCON").select(["lwe_thickness"], ["value"]),
-               "mean", 55000, 300000, True),
+    "ndvi": (hls_ndvi, "median", 30, 30, False, 12),
+    "sm_rootzone": (lambda r: ee.ImageCollection("NASA/SMAP/SPL4SMGP/008").filterBounds(r).select(["sm_rootzone"], ["value"]),
+                    "mean", 9000, 9000, True, 1),
+    "tws_cm": (lambda r: ee.ImageCollection("NASA/GRACE/MASS_GRIDS_V04/MASCON").filterBounds(r).select(["lwe_thickness"], ["value"]),
+               "mean", 55000, 300000, True, 12),
 }
 
 
 def monthly_composites(coll, start, n_months, how):
+    # median()/mean() drop the native projection; without it EE works on a global grid and runs out of memory.
+    proj = coll.first().projection()
+
     def one(i):
         d = ee.Date(start).advance(i, "month")
         sub = coll.filterDate(d, d.advance(1, "month"))
-        img = sub.median() if how == "median" else sub.mean()
+        img = (sub.median() if how == "median" else sub.mean()).setDefaultProjection(proj)
         return img.set({"month": d.format("YYYY-MM"), "n": sub.size()})
     ic = ee.ImageCollection(ee.List.sequence(0, n_months - 1).map(one))
     return ic.filter(ee.Filter.gt("n", 0))  # empty months have no bands and would break reduceRegions
@@ -100,11 +106,22 @@ def main():
     start = pd.Period(args.start, "M")
     n_months = (pd.Period(args.end, "M") - start).n + 1
 
-    rows = []
-    for var, (make, how, scale, native, at_centroid) in PRODUCTS.items():
-        print(f"{var}: requesting {n_months} monthly composites ...")
-        ic = monthly_composites(make(), str(start.start_time.date()), n_months, how)
-        rows += to_rows(sample(ic, centroids if at_centroid else polys, scale), var, native)
+    region = polys.geometry()
+    jobs = []  # small requests stay under the EE timeout and memory limit; run them in parallel
+    for var, (make, how, scale, native, at_centroid, step) in PRODUCTS.items():
+        coll = make(region)
+        for i in range(0, n_months, step):
+            jobs.append((var, coll, start + i, min(step, n_months - i), how, scale, native,
+                         centroids if at_centroid else polys))
+
+    def run(job):
+        var, coll, first, n, how, scale, native, fc = job
+        out = to_rows(sample(monthly_composites(coll, str(first.start_time.date()), n, how), fc, scale), var, native)
+        print(f"{var} {first} +{n}: {len(out)} rows")
+        return out
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        rows = [r for chunk in pool.map(run, jobs) for r in chunk]
 
     sat = add_anomaly(pd.DataFrame(rows).dropna(subset=["value"]))
     cols = ["field_id", "month", "variable", "value", "anomaly", "native_res_m"]

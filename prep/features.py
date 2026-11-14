@@ -24,6 +24,8 @@ def classify_seasons(ndvi: pd.DataFrame) -> pd.DataFrame:
     """Label each field-season from monthly NDVI rows (`field_id, month, value`).
 
     season = harvest year; winter = Nov(prev year)-May, summer = Jun-Sep.
+    Seasons with no Feb-Apr observation (the winter peak) are dropped: unfinished or too cloudy to judge.
+    NDVI cannot tell wheat from lentil, so both are `winter_crop`.
     """
     d = ndvi.copy()
     date = pd.to_datetime(d["month"])
@@ -32,13 +34,15 @@ def classify_seasons(ndvi: pd.DataFrame) -> pd.DataFrame:
     keys = ["field_id", "season"]
     winter = d[(m >= 11) | (m <= 5)].groupby(keys)["value"].max().rename("winter_max")
     summer = d[(m >= 6) & (m <= 9)].groupby(keys)["value"].max().rename("summer_max")
-    out = pd.concat([winter, summer], axis=1).reset_index()
+    peak = d[(m >= 2) & (m <= 4)].groupby(keys)["value"].count().rename("n_peak")
+    out = pd.concat([winter, summer, peak], axis=1).reset_index()
+    out = out[out["n_peak"] > 0].drop(columns="n_peak")
 
     def label(r):
         if r.summer_max >= CROP_MIN:
             return "irrigated_summer"  # green in the dry season = irrigated
         if r.winter_max >= CROP_MIN:
-            return "cereal"
+            return "winter_crop"
         if r.winter_max < FALLOW_MAX:
             return "fallow"
         return "uncertain"
@@ -56,7 +60,9 @@ def _selftest():
         for f, (pm, v) in peak.items() for mo in months
     ]
     got = classify_seasons(pd.DataFrame(rows)).set_index("field_id")["class"].to_dict()
-    assert got == {"A": "cereal", "B": "fallow", "C": "irrigated_summer", "D": "uncertain"}, got
+    assert got == {"A": "winter_crop", "B": "fallow", "C": "irrigated_summer", "D": "uncertain"}, got
+    unfinished = pd.DataFrame({"field_id": "A", "month": ["2025-11", "2025-12"], "value": [0.15, 0.15]})
+    assert classify_seasons(unfinished).empty  # Nov-Dec only: season not judged, not "fallow"
 
     ts = pd.DataFrame({"field_id": "A", "variable": "ndvi",
                        "month": ["2019-03", "2020-03", "2021-03", "2022-03"],
