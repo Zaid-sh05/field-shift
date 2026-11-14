@@ -38,6 +38,7 @@ All roles write to and read from `data/`. These names and columns are fixed. If 
 
 | variable | meaning | confidence |
 |---|---|---|
-| `heat_days` | days with elevation-corrected POWER Tmax > 35 °C | **low**: POWER Tmax runs hot here (~82 days a year vs ~46 in ERA5-Land); only mean temperature was checked against the station |
-| `hot_days_p90` | days above the site's own 90th percentile of daily Tmax (39.6 °C raw POWER, 1998–2025) | medium: relative to local history, so a constant bias cancels; use this for heat risk |
+| `heat_days` | days above the site's own 90th percentile of daily Tmax (39.6 °C raw POWER, 1998–2025), about 36 a year | low: a relative indicator. A fixed 35 °C threshold gave ~82 days a year against ~46 in ERA5-Land, because POWER Tmax runs hot here, so it was dropped |
 | `frost_days` | days with elevation-corrected POWER Tmin < 0 °C | low: not checked against local Tmin |
+
+No score is built on either variable.
