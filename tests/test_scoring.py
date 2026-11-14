@@ -81,6 +81,49 @@ class ScoringTests(unittest.TestCase):
             self.assertEqual(set(row), {"WW", "WL", "WF"})
             self.assertGreaterEqual(row["WF"], row["WW"])  # half the land is fallow and cannot fail
 
+    def test_past_seasons_can_be_judged_without_later_data(self):
+        blind = {r["id"]: r for r in s.evaluate("maru_1", EQUAL, before=2025)["rotations"]}
+        full = {r["id"]: r for r in s.evaluate("maru_1", EQUAL)["rotations"]}
+        self.assertEqual(blind["WW"]["criteria"]["water"]["seasons"], 26)  # the 2024-25 drought is hidden
+        self.assertGreater(blind["WW"]["criteria"]["risk"]["score"], full["WW"]["criteria"]["risk"]["score"])
+
+    def test_next_season_after_three_wheat_years(self):
+        result = s.next_season("maru_1", ["WHEAT", "WHEAT", "WHEAT"], EQUAL)
+        by_crop = {o["crop"]: o for o in result["options"]}
+        self.assertEqual(set(by_crop), {"WHEAT", "LENTIL", "FALLOW"})
+        self.assertEqual(by_crop["WHEAT"]["rules"], {"varied": False, "legume": False, "no_third": False})
+        self.assertEqual(by_crop["LENTIL"]["rules"], {"varied": True, "legume": True, "no_third": True})
+        self.assertEqual(by_crop["FALLOW"]["rules"], {"varied": True, "legume": False, "no_third": True})
+        self.assertEqual(result["options"][0]["crop"], "LENTIL")
+        self.assertEqual(result["options"][-1]["crop"], "WHEAT")
+        self.assertIsNone(by_crop["FALLOW"]["outlook"])
+        outlook = by_crop["WHEAT"]["outlook"]
+        self.assertEqual(outlook["seasons"], 27)
+        self.assertTrue(outlook["worst"] <= outlook["typical"] <= outlook["best"] <= 100)
+        self.assertLess(outlook["half_or_more"], by_crop["LENTIL"]["outlook"]["half_or_more"])  # wheat needs more water
+
+    def test_next_season_history_changes_the_advice(self):
+        after_lentil = {o["crop"]: o for o in s.next_season("maru_1", ["WHEAT", "LENTIL"], EQUAL)["options"]}
+        self.assertEqual(after_lentil["WHEAT"]["rules"], {"varied": True, "legume": True, "no_third": True})
+        self.assertFalse(after_lentil["LENTIL"]["rules"]["varied"])
+        self.assertGreater(after_lentil["WHEAT"]["criteria"]["soil"], after_lentil["LENTIL"]["criteria"]["soil"])
+        order = [o["crop"] for o in s.next_season("maru_1", ["WHEAT", "LENTIL"], EQUAL)["options"]]
+        self.assertEqual(order[-1], "LENTIL")  # lentil after lentil is never ranked first, whatever its water score
+        self.assertTrue(after_lentil["LENTIL"]["legume_repeat"])
+        self.assertFalse(after_lentil["WHEAT"]["legume_repeat"])
+        moisture = s.next_season("maru_1", ["WHEAT"], EQUAL)["soil_moisture"]
+        self.assertIn(moisture["state"], ("dry", "normal", "wet"))
+        for bad in ([], ["CORN"], ["WHEAT", None]):
+            with self.assertRaises(ValueError):
+                s.next_season("maru_1", bad, EQUAL)
+
+    def test_backtest_summary_matches_the_replay(self):
+        summary, replay = s.backtest_summary("maru_1"), s.season_replay("maru_1")
+        self.assertEqual(summary["WW"]["worst_year"], 2025)
+        self.assertEqual(summary["WW"]["worst"], replay[2025]["WW"])
+        self.assertEqual(summary["WW"]["under_half"], sum(row["WW"] < 50 for row in replay.values()))
+        self.assertGreaterEqual(summary["WF"]["mean"], summary["WW"]["mean"])
+
     def test_bad_weights_are_rejected(self):
         for bad in ({}, {**EQUAL, "effort": 3}, {**EQUAL, "water": -1}, {c: 0 for c in s.CRITERIA}, {**EQUAL, "water": True}):
             with self.assertRaises(ValueError):

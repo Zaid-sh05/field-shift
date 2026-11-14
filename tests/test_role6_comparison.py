@@ -80,6 +80,18 @@ class ComparisonTests(unittest.TestCase):
         self.assertTrue(any(c.value == translate("your_current") for c in at.caption))
         self.assertTrue(any(c.value.startswith(translate("vs_current_up")[:10]) for c in at.caption))
 
+    def test_next_season_advisor_needs_history_then_ranks_options(self):
+        at = comparison_app(False)
+        self.assertTrue(any(i.value == translate("advisor_prompt") for i in at.info))
+        for index in range(3):
+            at.selectbox(key=f"fieldshift_history_{index}").set_value("WHEAT").run(timeout=30)
+        self.assertEqual(len(at.exception), 0)
+        self.assertFalse(any(i.value == translate("advisor_prompt") for i in at.info))
+        ranked = [m.value for m in at.markdown if m.value.startswith("**1. ")]
+        self.assertEqual(len(ranked), 1)
+        self.assertIn(translate("crop_LENTIL"), ranked[0])  # after three wheat seasons a legume comes first
+        self.assertTrue(any("✗ " + translate("rule_no_third") in c.value for c in at.caption))
+
     def test_supplied_contract_rotation_without_fabricated_scores(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)

@@ -116,14 +116,18 @@ def _is_crop(name):
     return name in STAGES
 
 
-def rotation_criteria(field_id, sequence, rain_factor=1.0, warming_c=0.0):
-    """The five criterion scores for one rotation, each with the numbers behind it."""
+def rotation_criteria(field_id, sequence, rain_factor=1.0, warming_c=0.0, before=None):
+    """The five criterion scores for one rotation, each with the numbers behind it.
+
+    `before` keeps only harvest years earlier than it, so a past season can be judged on what was known then.
+    """
     _, crops, profile, _, _ = _tables()
     grown = [c for c in sequence if _is_crop(c)]
-    per_crop = {c: crop_seasons(field_id, c, rain_factor, warming_c) for c in set(grown)}
+    known = lambda seasons: {y: v for y, v in seasons.items() if before is None or y < before}
+    per_crop = {c: known(crop_seasons(field_id, c, rain_factor, warming_c)) for c in set(grown)}
     years = sorted(set.intersection(*(set(v) for v in per_crop.values()))) if per_crop else []
     # Rank seasons by rain over the longest crop season so every rotation is tested on the same dry years.
-    ref = crop_seasons(field_id, "WHEAT", rain_factor, warming_c)
+    ref = known(crop_seasons(field_id, "WHEAT", rain_factor, warming_c))
     dry_years = sorted(ref, key=lambda y: ref[y]["rain_mm"])[:max(1, math.ceil(len(ref) * DRY_SHARE))]
 
     def met(year_list):  # fallow seasons have no crop to fail, so they count as fully met
@@ -154,7 +158,7 @@ def _totals(per_rotation, weights):
             for rid, crit in per_rotation.items()}
 
 
-def evaluate(field_id, weights, rain_factor=1.0, warming_c=0.0):
+def evaluate(field_id, weights, rain_factor=1.0, warming_c=0.0, before=None):
     """Rank the field's rotations by the farmer's weights (any positive numbers per criterion).
 
     `rain_factor` and `warming_c` re-run the same physics on a what-if climate (see crop_seasons).
@@ -169,7 +173,8 @@ def evaluate(field_id, weights, rain_factor=1.0, warming_c=0.0):
     rotations = _tables()[3].get(field_id)
     if not rotations:
         raise ValueError(f"no rotations for field {field_id!r}")
-    per_rotation = {r["id"]: rotation_criteria(field_id, r["sequence"], rain_factor, warming_c) for r in rotations}
+    per_rotation = {r["id"]: rotation_criteria(field_id, r["sequence"], rain_factor, warming_c, before)
+                    for r in rotations}
     totals = _totals(per_rotation, weights)
     order = sorted(totals, key=totals.get, reverse=True)
     close = len(order) > 1 and totals[order[0]] - totals[order[1]] < CLOSE_MARGIN
@@ -203,6 +208,84 @@ def season_replay(field_id):
             shares = [crop_seasons(field_id, c)[year]["met"] if _is_crop(c) else 1.0 for c in r["sequence"]]
             out[year][r["id"]] = round(100 * sum(shares) / len(shares))
     return out
+
+
+def backtest_summary(field_id):
+    """Per rotation over the real record: mean and worst share of water need met, and seasons under half."""
+    replay = season_replay(field_id)
+    out = {}
+    for rid in next(iter(replay.values())):
+        values = [row[rid] for row in replay.values()]
+        worst = min(replay, key=lambda y: replay[y][rid])
+        out[rid] = {"mean": round(sum(values) / len(values)), "worst": replay[worst][rid], "worst_year": worst,
+                    "under_half": sum(v < 50 for v in values), "seasons": len(values)}
+    return out
+
+
+def soil_moisture_now(field_id):
+    """Latest SMAP root-zone moisture for the field's ~9 km cell, as a z-score against the same calendar month."""
+    sat = pd.read_csv(DATA / "sat_monthly.csv")
+    rows = sat[(sat.field_id == field_id) & (sat.variable == "sm_rootzone")].dropna(subset=["anomaly"])
+    last = rows.sort_values("month").iloc[-1]
+    z = float(last.anomaly)
+    return {"month": last.month, "anomaly": round(z, 1), "state": "dry" if z <= -1 else "wet" if z >= 1 else "normal"}
+
+
+def next_season(field_id, history, weights):
+    """Options for the coming season, given what the farmer grew before (oldest first, most recent last).
+
+    Each option (every crop in data/crops.csv, including fallow) is scored on the same five criteria:
+      water, risk   how often rain covered this crop's water need in the real record (fallow has no crop to fail)
+      soil          rotation rules met out of 3: not the same as last season; a legume within the three-season
+                    window; not a third season in a row of the same crop
+      bare, income  whether the season has a crop on the ground and a harvest
+    An option that repeats the same legume is listed last whatever its score (`legume_repeat`).
+    `outlook` gives the odds from the record. It is not a weather forecast: nobody knows the coming rain.
+    """
+    _, crops, profile, _, _ = _tables()
+    history = list(history)
+    if not history or any(c not in crops.index for c in history):
+        raise ValueError("history needs at least last season's crop, from: " + ", ".join(crops.index))
+    if set(weights) != set(CRITERIA) or sum(weights.values()) <= 0:
+        raise ValueError("weights must cover: " + ", ".join(CRITERIA))
+    green = float((1 - profile[profile.field_id == field_id].bare_share).sum())
+    wheat = crop_seasons(field_id, "WHEAT")
+    dry_years = sorted(wheat, key=lambda y: wheat[y]["rain_mm"])[:max(1, math.ceil(len(wheat) * DRY_SHARE))]
+    options = []
+    for crop in crops.index:
+        grown = _is_crop(crop)
+        window = history[-2:] + [crop]
+        rules = {
+            "varied": crop != history[-1],
+            "legume": any(bool(crops.loc[c].legume) for c in window),
+            "no_third": not (grown and len(history) >= 2 and history[-1] == history[-2] == crop),
+        }
+        seasons = crop_seasons(field_id, crop) if grown else {}
+        met = sorted(v["met"] for v in seasons.values())
+        criteria = {
+            "water": 100 * sum(met) / len(met) if grown else 100.0,
+            "risk": 100 * sum(seasons[y]["met"] for y in dry_years) / len(dry_years) if grown else 100.0,
+            "soil": 100 * sum(rules.values()) / len(rules),
+            "bare": 100 * green / 12 if grown else 0.0,
+            "income": 100.0 if grown else 0.0,
+        }
+        total = sum(weights[c] * criteria[c] for c in CRITERIA) / sum(weights.values())
+        options.append({
+            "crop": crop, "total": round(float(total), 1), "rules": rules,
+            # A legume straight after the same legume builds up soil-borne disease: shown, but never ranked first.
+            "legume_repeat": bool(grown and crops.loc[crop].legume and history[-1] == crop),
+            "criteria": {c: round(float(v), 1) for c, v in criteria.items()},
+            "outlook": {"seasons": len(met), "half_or_more": sum(m >= 0.5 for m in met),
+                        "typical": round(100 * met[len(met) // 2]), "worst": round(100 * met[0]),
+                        "best": round(100 * met[-1]),
+                        "demand_mm": round(sum(v["demand_mm"] for v in seasons.values()) / len(seasons))} if grown else None,
+        })
+    options.sort(key=lambda o: (o["legume_repeat"], -o["total"]))
+    last_year = max(wheat)
+    return {"options": options, "close_call": options[0]["total"] - options[1]["total"] < CLOSE_MARGIN,
+            "soil_moisture": soil_moisture_now(field_id),
+            "last_season": {"year": last_year, "rain_mm": round(wheat[last_year]["rain_mm"]),
+                            "driest": last_year == dry_years[0]}}
 
 
 def crop_calendar(sequence, start_month=10):

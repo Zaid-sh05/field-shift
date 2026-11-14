@@ -82,10 +82,63 @@ def _render_replay(st, t, field_id, rotations, language):
         f"{names[rid]} {replay[worst][rid]}%" for rid in names)))
 
 
+def _season(year):
+    return f"{year - 1}–{str(year)[2:]}"
+
+
+def _render_backtest_table(st, t, field_id, names):
+    from .. import scoring
+    summary = scoring.backtest_summary(field_id)
+    st.dataframe({t("bt_rotation"): [names[rid] for rid in summary],
+                  t("bt_mean"): [f'{v["mean"]}%' for v in summary.values()],
+                  t("bt_worst"): [f'{v["worst"]}% ({_season(v["worst_year"])})' for v in summary.values()],
+                  t("bt_under_half"): [f'{v["under_half"]} / {v["seasons"]}' for v in summary.values()]},
+                 hide_index=True, width="stretch")
+
+
+def _render_advisor(st, t, field_id, preferences):
+    """Next-season advisor: the farmer enters the last three seasons, the rules and the NASA record answer."""
+    from .. import scoring
+    from ..ui_components.evidence import badge
+    crops = list(scoring._tables()[1].index)
+    crop = lambda c: t(f"crop_{c}")
+    with st.container(border=True, key="role6_card_advisor"):
+        st.markdown(f'**{t("advisor_title")}**')
+        st.caption(t("advisor_how"))
+        columns = st.columns(3)
+        picks = [column.selectbox(t(label), [None, *crops], key=f"fieldshift_history_{index}",
+                                  format_func=lambda c: crop(c) if c else t("current_unsure"))
+                 for index, (column, label) in enumerate(zip(columns, ("adv_two_before", "adv_before", "adv_last")))]
+        if picks[-1] is None:
+            st.info(t("advisor_prompt"))
+            return
+        history = [c for c in picks if c]
+        result = scoring.next_season(field_id, history, preferences)
+        moisture, last = result["soil_moisture"], result["last_season"]
+        st.text(t("adv_history").format(history=" ← ".join(crop(c) for c in history)))
+        st.caption(t("adv_last_driest" if last["driest"] else "adv_last_rain").format(
+            season=_season(last["year"]), rain=last["rain_mm"]) + " " + t(f"adv_moisture_{moisture['state']}").format(
+            month=moisture["month"]) + " " + badge(t, "medium"))
+        mark = lambda ok: "✓" if ok else "✗"
+        for rank, option in enumerate(result["options"], 1):
+            st.markdown(f'**{rank}. {crop(option["crop"])}: {option["total"]:.0f} / 100**')
+            st.caption(" · ".join(f'{mark(ok)} {t("rule_" + rule)}' for rule, ok in option["rules"].items()))
+            if option["legume_repeat"]:
+                st.warning(t("adv_legume_repeat"))
+            outlook = option["outlook"]
+            st.caption(t("adv_outlook").format(**outlook) if outlook else t("adv_outlook_fallow"))
+        if result["close_call"]:
+            st.warning(t("close_call"))
+        st.caption(t("advisor_limits"))
+
+
 def _render_scored(st, t, state, rotations, result, current=None):
     from .. import scoring
     render_scored_cards(st, t, rotations, result, state["language"], current=current)
     _render_replay(st, t, result["field_id"], rotations, state["language"])
+    names = {r["id"]: r.get(f'name_{state["language"]}') or r["id"] for r in rotations}
+    _render_backtest_table(st, t, result["field_id"], names)
+    _render_advisor(st, t, result["field_id"], get_preferences(st.session_state))
     st.markdown(f'**{t("timeline_title")}**')
     by_id = {r["id"]: r for r in rotations}
     for scored in result["rotations"]:
