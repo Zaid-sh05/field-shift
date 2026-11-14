@@ -4,7 +4,7 @@ All roles write to and read from `data/`. These names and columns are fixed. If 
 
 | File | Owner | Columns / shape |
 |---|---|---|
-| `fields.geojson` | Role 4 | Polygon features with properties `field_id`, `name_ar`, `name_en`, `zone` (`maru`), `rain_mm` (may be empty) |
+| `fields.geojson` | Role 4 | Polygon features with properties `field_id`, `name_ar`, `name_en`, `zone` (`maru`), `rain_mm` (mean Oct–Jun rain from GPM IMERG; all three fields share one ~11 km IMERG cell, so it is regional) |
 | `climate_monthly.csv` | Role 2 | `field_id, month (YYYY-MM), variable, value, anomaly` |
 | `sat_monthly.csv` | Role 3 | `field_id, month (YYYY-MM), variable, value, anomaly, native_res_m` |
 | `field_static.csv` | Role 3 | `field_id, elevation_m, slope_deg` |
@@ -12,9 +12,9 @@ All roles write to and read from `data/`. These names and columns are fixed. If 
 | `ndvi_monthly_profile.csv` | Role 3 | `field_id, cal_month (1-12), ndvi_median, bare_share, n_years` — typical NDVI per calendar month 2015–2025; `bare_share` = share of years with NDVI < 0.25 (bare soil) |
 | `validation.json` | Role 3 | NASA vs local station checks: temperature (raw, lapse-corrected, sensitivity 5–7 °C/km) and rainfall (POWER, IMERG) |
 | `crops.csv` | Role 4 | `crop, family, legume, kc_mid, kc_end, season_days, sow_month, min_rain_mm, frost_sens, heat_c, income_level, source_url` |
-| `soil.json` | Role 4 | `{field_id: {clay_pct, sand_pct, soc_gkg, ph, awc_mm, q05, q95}}` |
+| `soil.json` | Role 4 (values from Role 3) | `{field_id: {clay_pct, sand_pct, soc_gkg, ph, source}}`: SoilGrids 250 m topsoil (0–30 cm), modelled. Clay, sand and pH agree with the Maru station profile; organic carbon reads about 2× the station value, so show it with low confidence. `prep/field_context.py` |
 | `soil_reference.json` | Role 4 | Published Maru research-site soil profile (NARC/JUST 2021). Reference only, **not** field measurements; use with low confidence |
-| `rotations.json` | Role 4 | `{field_id: [{id, name_ar, name_en, sequence: [crop, ...], is_current}]}`; `is_current` is `true`, `false` or `null` (null = unknown: NDVI shows a winter crop every year but cannot tell wheat from lentil, so the farmer confirms) |
+| `rotations.json` | Role 4 | `{field_id: [{id, name_ar, name_en, sequence: [crop, ...], is_current}]}`; `is_current` is `true`, `false` or `null` (null = unknown. Satellite history rules out wheat–fallow (`false`: no fallow season since 2015); wheat–wheat vs wheat–lentil stays `null` because NDVI cannot tell wheat from lentil, so the farmer confirms) |
 | `explanations.json` | Role 5 | `{field_id: {rotation_id: {ar, en}}}` |
 
 ## Conventions

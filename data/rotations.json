@@ -28,7 +28,7 @@
         "WHEAT",
         "FALLOW"
       ],
-      "is_current": null
+      "is_current": false
     }
   ],
   "maru_2": [
@@ -60,7 +60,7 @@
         "WHEAT",
         "FALLOW"
       ],
-      "is_current": null
+      "is_current": false
     }
   ],
   "maru_3": [
@@ -92,7 +92,7 @@
         "WHEAT",
         "FALLOW"
       ],
-      "is_current": null
+      "is_current": false
     }
   ]
 }

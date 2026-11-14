@@ -1,29 +1,23 @@
 {
   "maru_1": {
-    "clay_pct": null,
-    "sand_pct": null,
-    "soc_gkg": null,
-    "ph": null,
-    "awc_mm": null,
-    "q05": null,
-    "q95": null
+    "clay_pct": 48.8,
+    "sand_pct": 8.6,
+    "soc_gkg": 9.2,
+    "ph": 8.0,
+    "source": "SoilGrids 250 m, 0-30 cm (modelled, not a field test)"
   },
   "maru_2": {
-    "clay_pct": null,
-    "sand_pct": null,
-    "soc_gkg": null,
-    "ph": null,
-    "awc_mm": null,
-    "q05": null,
-    "q95": null
+    "clay_pct": 47.3,
+    "sand_pct": 8.8,
+    "soc_gkg": 10.3,
+    "ph": 8.0,
+    "source": "SoilGrids 250 m, 0-30 cm (modelled, not a field test)"
   },
   "maru_3": {
-    "clay_pct": null,
-    "sand_pct": null,
-    "soc_gkg": null,
-    "ph": null,
-    "awc_mm": null,
-    "q05": null,
-    "q95": null
+    "clay_pct": 48.0,
+    "sand_pct": 8.4,
+    "soc_gkg": 10.5,
+    "ph": 8.0,
+    "source": "SoilGrids 250 m, 0-30 cm (modelled, not a field test)"
   }
 }
