@@ -14,7 +14,7 @@ All roles write to and read from `data/`. These names and columns are fixed. If 
 | `crops.csv` | Role 4 | `crop, family, legume, kc_mid, kc_end, season_days, sow_month, min_rain_mm, frost_sens, heat_c, income_level, source_url` |
 | `soil.json` | Role 4 | `{field_id: {clay_pct, sand_pct, soc_gkg, ph, awc_mm, q05, q95}}` |
 | `soil_reference.json` | Role 4 | Published Maru research-site soil profile (NARC/JUST 2021). Reference only, **not** field measurements; use with low confidence |
-| `rotations.json` | Role 4 | `{field_id: [{id, name_ar, name_en, sequence: [crop, ...], is_current}]}` |
+| `rotations.json` | Role 4 | `{field_id: [{id, name_ar, name_en, sequence: [crop, ...], is_current}]}`; `is_current` is `true`, `false` or `null` (null = unknown: NDVI shows a winter crop every year but cannot tell wheat from lentil, so the farmer confirms) |
 | `explanations.json` | Role 5 | `{field_id: {rotation_id: {ar, en}}}` |
 
 ## Conventions
