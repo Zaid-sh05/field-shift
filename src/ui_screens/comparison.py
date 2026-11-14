@@ -38,19 +38,54 @@ def _production_rotation_records(records):
     return safe
 
 
-def _score(field_id, preferences, rotations):
+def _scenario_controls(st, t, rotations, language):
+    """What-if sliders and the farmer's own answer about the current rotation. Returns (rain_factor, warming, current)."""
+    with st.container(border=True, key="role6_card_scenario"):
+        st.markdown(f'**{t("scenario_title")}**')
+        a, b = st.columns(2)
+        rain = a.slider(t("scenario_rain"), min_value=-50, max_value=20, value=0, step=10, format="%d%%",
+                        key="fieldshift_scenario_rain")
+        warming = b.slider(t("scenario_warming"), min_value=0.0, max_value=3.0, value=0.0, step=0.5, format="+%.1f °C",
+                           key="fieldshift_scenario_warming")
+        if rain or warming:
+            st.warning(t("scenario_note").format(rain=rain, warming=warming))
+        else:
+            st.caption(t("scenario_hint"))
+    # Satellites ruled some rotations out (is_current false); only the farmer can settle the rest.
+    possible = [r for r in rotations if r.get("is_current") is not False]
+    names = {r["id"]: r.get(f"name_{language}") or r["id"] for r in possible}
+    current = st.selectbox(t("current_question"), [None, *names], key="fieldshift_current_rotation",
+                           format_func=lambda rid: names.get(rid, t("current_unsure")))
+    return 1 + rain / 100, warming, current
+
+
+def _score(field_id, preferences, rotations, rain_factor=1.0, warming_c=0.0):
     """Scores for the rotations on screen, or None when the engine's data does not cover exactly these."""
     from .. import scoring
     try:
-        result = scoring.evaluate(field_id, preferences)
+        result = scoring.evaluate(field_id, preferences, rain_factor, warming_c)
     except (ValueError, KeyError, OSError):
         return None
     return result if {r["id"] for r in rotations} == {r["id"] for r in result["rotations"]} else None
 
 
-def _render_scored(st, t, state, rotations, result):
+def _render_replay(st, t, field_id, rotations, language):
+    """How each rotation would have held up in every real season on record."""
     from .. import scoring
-    render_scored_cards(st, t, rotations, result, state["language"])
+    replay = scoring.season_replay(field_id)
+    names = {r["id"]: r.get(f"name_{language}") or r["id"] for r in rotations}
+    st.markdown(f'**{t("replay_title")}**')
+    st.line_chart({names[rid]: {f"{year - 1}-{str(year)[2:]}": row[rid] for year, row in replay.items()}
+                   for rid in names}, height=260, y_label=t("replay_axis"))
+    worst = min(replay, key=lambda year: min(replay[year].values()))
+    st.caption(t("replay_note").format(n=len(replay), season=f"{worst - 1}–{str(worst)[2:]}", values=" · ".join(
+        f"{names[rid]} {replay[worst][rid]}%" for rid in names)))
+
+
+def _render_scored(st, t, state, rotations, result, current=None):
+    from .. import scoring
+    render_scored_cards(st, t, rotations, result, state["language"], current=current)
+    _render_replay(st, t, result["field_id"], rotations, state["language"])
     st.markdown(f'**{t("timeline_title")}**')
     by_id = {r["id"]: r for r in rotations}
     for scored in result["rotations"]:
@@ -86,9 +121,10 @@ def render(st, t, state, *, preview=False, data=None):
         st.warning(DEMO_LABEL)
         st.caption(t("demo_limitations"))
     else:
-        result = _score(selected, preferences, rotations)
+        rain_factor, warming, current = _scenario_controls(st, t, rotations, state["language"])
+        result = _score(selected, preferences, rotations, rain_factor, warming)
         if result:
-            _render_scored(st, t, state, rotations, result)
+            _render_scored(st, t, state, rotations, result, current)
             return
         st.info(t("scoring_pending"))
     render_cards(st, t, rotations, state["language"], demo=preview)

@@ -59,6 +59,28 @@ class ScoringTests(unittest.TestCase):
         from src.ui_state import CRITERIA
         self.assertEqual(CRITERIA, s.CRITERIA)
 
+    def test_scenarios_move_water_and_risk_in_the_physical_direction(self):
+        base = {r["id"]: r["criteria"] for r in s.evaluate("maru_1", EQUAL)["rotations"]}
+        dry = {r["id"]: r["criteria"] for r in s.evaluate("maru_1", EQUAL, rain_factor=0.8)["rotations"]}
+        hot = {r["id"]: r["criteria"] for r in s.evaluate("maru_1", EQUAL, warming_c=2.0)["rotations"]}
+        for rid in ("WW", "WL", "WF"):
+            for c in ("water", "risk"):
+                self.assertLess(dry[rid][c]["score"], base[rid][c]["score"])
+                self.assertLess(hot[rid][c]["score"], base[rid][c]["score"])
+            for c in ("soil", "bare", "income"):  # not climate-driven in this model
+                self.assertEqual(dry[rid][c]["score"], base[rid][c]["score"])
+        self.assertGreater(hot["WW"]["water"]["demand_mm"]["WHEAT"], base["WW"]["water"]["demand_mm"]["WHEAT"])
+        observed = s.crop_seasons("maru_1", "WHEAT")
+        self.assertEqual(dry["WW"]["water"]["rain_mm"]["WHEAT"], round(0.8 * sum(v["rain_mm"] for v in observed.values()) / 27))
+
+    def test_replay_covers_every_real_season_and_shows_the_drought(self):
+        replay = s.season_replay("maru_1")
+        self.assertEqual(len(replay), 27)
+        self.assertEqual(min(replay, key=lambda y: replay[y]["WW"]), 2025)
+        for year, row in replay.items():
+            self.assertEqual(set(row), {"WW", "WL", "WF"})
+            self.assertGreaterEqual(row["WF"], row["WW"])  # half the land is fallow and cannot fail
+
     def test_bad_weights_are_rejected(self):
         for bad in ({}, {**EQUAL, "effort": 3}, {**EQUAL, "water": -1}, {c: 0 for c in s.CRITERIA}, {**EQUAL, "water": True}):
             with self.assertRaises(ValueError):

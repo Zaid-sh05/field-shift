@@ -117,7 +117,20 @@
     "trust_rain_station": "مطر المحطة",
     "trust_rain_note": "مصدرا ناسا يسجّلان مطرًا أقل من المحطة بنحو {pct}%، لذلك ثقة أرقام المطر متوسطة.",
     "trust_heat_note": "الحرارة العظمى والصغرى لم نتمكن من مقارنتها بقياس أرضي، لذلك لا نبني عليها درجات.",
-    "sources": "مصادر الأرقام وحدودها"
+    "sources": "مصادر الأرقام وحدودها",
+    "scenario_title": "جرّب سيناريو مناخي: ماذا لو تغيّر المطر أو الحرارة؟",
+    "scenario_rain": "تغيّر المطر",
+    "scenario_warming": "ارتفاع الحرارة",
+    "scenario_hint": "حرّك المؤشرين لترى كيف يتغيّر ترتيب الدورات. الوضع الحالي هو المناخ المرصود 1998–2025.",
+    "scenario_note": "سيناريو افتراضي وليس تنبؤًا: مطر كل شهر {rain}% وحرارة +{warming} درجة فوق السجل المرصود. درجتا المياه والجفاف أُعيد حسابهما بالمعادلات نفسها.",
+    "current_question": "ماذا تزرع في هذا الحقل حاليًا؟ (الأقمار لا تميّز القمح عن العدس)",
+    "current_unsure": "لا أعرف / لم أحدّد",
+    "your_current": "هذه دورتك الحالية كما أخبرتنا",
+    "vs_current_up": "أعلى من دورتك الحالية بـ {points} نقطة",
+    "vs_current_down": "أقل من دورتك الحالية بـ {points} نقطة",
+    "replay_title": "اختبار على المواسم الحقيقية: كم غطّى المطر من حاجة كل دورة؟",
+    "replay_axis": "% من حاجة الماء",
+    "replay_note": "{n} موسمًا من سجل NASA POWER الفعلي، وليست سيناريو. الأصعب كان موسم {season}: {values}. في سنة البور لا محصول ليفشل."
   },
   "en": {
     "awaiting_rotation": "Awaiting rotation data",
@@ -237,6 +250,19 @@
     "trust_rain_station": "Station rain",
     "trust_rain_note": "Both NASA sources record about {pct}% less rain than the station, so rainfall numbers carry medium confidence.",
     "trust_heat_note": "We could not check daily maximum and minimum temperature against ground data, so no score is built on them.",
-    "sources": "Where the numbers come from, and their limits"
+    "sources": "Where the numbers come from, and their limits",
+    "scenario_title": "Try a climate scenario: what if rain or temperature changed?",
+    "scenario_rain": "Change in rain",
+    "scenario_warming": "Warming",
+    "scenario_hint": "Move the two sliders to see how the ranking shifts. The default is the observed climate, 1998–2025.",
+    "scenario_note": "A what-if scenario, not a forecast: every month's rain {rain}% and temperature +{warming} °C against the observed record. The water and dry-year scores are recomputed with the same equations.",
+    "current_question": "What do you grow on this field now? (Satellites cannot tell wheat from lentil)",
+    "current_unsure": "Not sure / not set",
+    "your_current": "This is your current rotation, as you told us",
+    "vs_current_up": "{points} points above your current rotation",
+    "vs_current_down": "{points} points below your current rotation",
+    "replay_title": "Tested on real seasons: how much of each rotation's water need did rain cover?",
+    "replay_axis": "% of water need",
+    "replay_note": "{n} seasons from the actual NASA POWER record, not a scenario. The hardest was {season}: {values}. A fallow year has no crop to fail."
   }
 }

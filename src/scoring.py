@@ -83,8 +83,13 @@ def _tables():
 
 
 @lru_cache(maxsize=None)
-def crop_seasons(field_id, crop):
-    """Per harvest year: crop water demand (mm), rain during the crop's days (mm) and the share met (0-1)."""
+def crop_seasons(field_id, crop, rain_factor=1.0, warming_c=0.0):
+    """Per harvest year: crop water demand (mm), rain during the crop's days (mm) and the share met (0-1).
+
+    `rain_factor` and `warming_c` build a what-if scenario from the real record: every month's rain is
+    multiplied by the factor and every temperature raised by the warming (relative humidity held constant,
+    so warmer air is also drier air). The defaults give the observed record.
+    """
     wide, crops, _, _, elevation = _tables()
     row = crops.loc[crop]
     months = wide.loc[field_id]
@@ -99,9 +104,9 @@ def crop_seasons(field_id, crop):
                 break
             m = months.loc[key]
             demand += kc_on_day(crop, d, row.kc_mid, row.kc_end) * et0_penman_monteith(
-                m.tmean_c, m.tmax_c, m.tmin_c, m.rh_pct, m.wind_m_s, m.solar_mj_m2_day, day.timetuple().tm_yday,
-                elevation[field_id])
-            rain += m.precip_mm / calendar.monthrange(day.year, day.month)[1]
+                m.tmean_c + warming_c, m.tmax_c + warming_c, m.tmin_c + warming_c, m.rh_pct, m.wind_m_s,
+                m.solar_mj_m2_day, day.timetuple().tm_yday, elevation[field_id])
+            rain += rain_factor * m.precip_mm / calendar.monthrange(day.year, day.month)[1]
         else:
             out[year] = {"demand_mm": float(demand), "rain_mm": float(rain), "met": float(min(1.0, rain / demand))}
     return out
@@ -111,14 +116,14 @@ def _is_crop(name):
     return name in STAGES
 
 
-def rotation_criteria(field_id, sequence):
+def rotation_criteria(field_id, sequence, rain_factor=1.0, warming_c=0.0):
     """The five criterion scores for one rotation, each with the numbers behind it."""
     _, crops, profile, _, _ = _tables()
     grown = [c for c in sequence if _is_crop(c)]
-    per_crop = {c: crop_seasons(field_id, c) for c in set(grown)}
+    per_crop = {c: crop_seasons(field_id, c, rain_factor, warming_c) for c in set(grown)}
     years = sorted(set.intersection(*(set(v) for v in per_crop.values()))) if per_crop else []
     # Rank seasons by rain over the longest crop season so every rotation is tested on the same dry years.
-    ref = crop_seasons(field_id, "WHEAT")
+    ref = crop_seasons(field_id, "WHEAT", rain_factor, warming_c)
     dry_years = sorted(ref, key=lambda y: ref[y]["rain_mm"])[:max(1, math.ceil(len(ref) * DRY_SHARE))]
 
     def met(year_list):  # fallow seasons have no crop to fail, so they count as fully met
@@ -149,8 +154,10 @@ def _totals(per_rotation, weights):
             for rid, crit in per_rotation.items()}
 
 
-def evaluate(field_id, weights):
+def evaluate(field_id, weights, rain_factor=1.0, warming_c=0.0):
     """Rank the field's rotations by the farmer's weights (any positive numbers per criterion).
+
+    `rain_factor` and `warming_c` re-run the same physics on a what-if climate (see crop_seasons).
 
     Returns rotations sorted by total, plus two honesty flags:
       close_call        the top two are within CLOSE_MARGIN points, or a +/-10% change in one weight flips the order
@@ -162,7 +169,7 @@ def evaluate(field_id, weights):
     rotations = _tables()[3].get(field_id)
     if not rotations:
         raise ValueError(f"no rotations for field {field_id!r}")
-    per_rotation = {r["id"]: rotation_criteria(field_id, r["sequence"]) for r in rotations}
+    per_rotation = {r["id"]: rotation_criteria(field_id, r["sequence"], rain_factor, warming_c) for r in rotations}
     totals = _totals(per_rotation, weights)
     order = sorted(totals, key=totals.get, reverse=True)
     close = len(order) > 1 and totals[order[0]] - totals[order[1]] < CLOSE_MARGIN
@@ -179,6 +186,23 @@ def evaluate(field_id, weights):
         "close_call": bool(close),
         "low_confidence_top": any(weights[c] == heaviest and CONFIDENCE[c] == "low" for c in CRITERIA),
     }
+
+
+def season_replay(field_id):
+    """How each rotation would have fared in every real season: {harvest_year: {rotation_id: % of water need met}}.
+
+    A rotation's value for a year is the mean over its phases, as if each phase were on part of the land that
+    year. Fallow phases count as 100 (no crop to fail). This is the observed record, not a scenario.
+    """
+    rotations = _tables()[3].get(field_id) or []
+    wheat = crop_seasons(field_id, "WHEAT")
+    out = {}
+    for year in wheat:
+        out[year] = {}
+        for r in rotations:
+            shares = [crop_seasons(field_id, c)[year]["met"] if _is_crop(c) else 1.0 for c in r["sequence"]]
+            out[year][r["id"]] = round(100 * sum(shares) / len(shares))
+    return out
 
 
 def crop_calendar(sequence, start_month=10):

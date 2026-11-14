@@ -43,11 +43,15 @@ def criterion_detail(t, criterion, values):
     return t("detail_income").format(harvests=values["harvests"], of=values["of"])
 
 
-def render_scored_cards(st, t, rotations, result, language):
-    """Cards ranked by the farmer's priorities. Every score shows its numbers, confidence and source."""
+def render_scored_cards(st, t, rotations, result, language, *, current=None):
+    """Cards ranked by the farmer's priorities. Every score shows its numbers, confidence and source.
+
+    `current` is the rotation the farmer says the field is in; the other cards then show the gap to it.
+    """
     from .evidence import badge
     by_id = {r["id"]: r for r in rotations}
     name = lambda rid: by_id[rid].get(f"name_{language}") or rid
+    totals = {r["id"]: r["total"] for r in result["rotations"]}
     columns = st.columns(len(result["rotations"]))
     for index, (column, scored) in enumerate(zip(columns, result["rotations"])):
         rotation, criteria = by_id[scored["id"]], scored["criteria"]
@@ -55,7 +59,13 @@ def render_scored_cards(st, t, rotations, result, language):
             st.caption(t("rank_n").format(n=index + 1))
             st.markdown(f"### {name(scored['id'])}")
             st.metric(t("score"), f"{scored['total']:.0f} / 100")
-            st.caption(t(CURRENT_KEYS[rotation.get("is_current")]))
+            if current == scored["id"]:
+                st.caption(t("your_current"))
+            elif current in totals:
+                gap = scored["total"] - totals[current]
+                st.caption(t("vs_current_up" if gap >= 0 else "vs_current_down").format(points=abs(round(gap))))
+            else:
+                st.caption(t(CURRENT_KEYS[rotation.get("is_current")]))
             ordered = sorted(criteria, key=lambda c: criteria[c]["score"])
             st.text(t("strongest").format(a=t(f"priority_{ordered[-1]}"), b=t(f"priority_{ordered[0]}")))
             for criterion, values in criteria.items():

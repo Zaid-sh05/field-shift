@@ -66,6 +66,20 @@ class ComparisonTests(unittest.TestCase):
         self.assertIn(translate("bare_soil"), timeline)
         self.assertIn(translate("crop_WHEAT"), timeline)
 
+    def test_scenario_and_current_rotation_change_the_cards(self):
+        at = comparison_app(False)
+        base = [m.value for m in at.metric if " / 100" in m.value]
+        self.assertFalse(any(translate("scenario_note")[:20] in w.value for w in at.warning))
+        at.slider(key="fieldshift_scenario_rain").set_value(-40).run(timeout=30)
+        self.assertEqual(len(at.exception), 0)
+        self.assertNotEqual([m.value for m in at.metric if " / 100" in m.value], base)
+        self.assertTrue(any(w.value.startswith(translate("scenario_note")[:20]) for w in at.warning))
+        # Satellites ruled out wheat-fallow, so the farmer is only asked about the other two.
+        self.assertEqual(at.selectbox(key="fieldshift_current_rotation").options[1:], ["قمح ← قمح", "قمح ← عدس"])
+        at.selectbox(key="fieldshift_current_rotation").set_value("WW").run(timeout=30)
+        self.assertTrue(any(c.value == translate("your_current") for c in at.caption))
+        self.assertTrue(any(c.value.startswith(translate("vs_current_up")[:10]) for c in at.caption))
+
     def test_supplied_contract_rotation_without_fabricated_scores(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)
