@@ -24,8 +24,13 @@ def load_fields():
 
 
 fields = load_fields()
-m = folium.Map(location=[32.0, 36.0], zoom_start=8, tiles="CartoDB positron")
-folium.GeoJson(fields, tooltip=folium.GeoJsonTooltip(["name_ar", "zone"])).add_to(m)
+m = folium.Map(tiles=None)
+folium.TileLayer(  # keyless satellite basemap (CARTO now needs an API key)
+    tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attr="Esri World Imagery").add_to(m)
+layer = folium.GeoJson(fields, tooltip=folium.GeoJsonTooltip(["name_ar"]),
+                       style_function=lambda _: {"color": "#ffd60a", "weight": 3, "fillOpacity": 0.1}).add_to(m)
+m.fit_bounds(layer.get_bounds())
 st_folium(m, height=420, use_container_width=True)
 
 st.subheader("حالة ملفات البيانات")
