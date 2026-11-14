@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0",
+  "location": "Maru, Irbid, Jordan",
+  "purpose": "Soil scoring handoff; no invented field-specific soil data",
+  "historical_reference": {
+    "soil_profile_id": "MARU_STUDY_2015_2017",
+    "site_id": "MARU_PUBLISHED_POINT",
+    "period": "2015-2017 study",
+    "source_id": "MARU_NARC_JUST_2021",
+    "source_locator": "Table 1, printed p15",
+    "scope": "published research-site profile; NOT measurements of Field 1-3",
+    "sampling_depth_cm": null,
+    "ec_extraction_method": null,
+    "properties": {
+      "pH": {
+        "value": 7.75,
+        "unit": "1"
+      },
+      "EC": {
+        "value": 0.42,
+        "unit": "dS/m"
+      },
+      "P": {
+        "value": 0.79,
+        "unit": "ppm"
+      },
+      "K": {
+        "value": 194.0,
+        "unit": "ppm"
+      },
+      "CaCO3": {
+        "value": 1.9,
+        "unit": "%"
+      },
+      "N": {
+        "value": 0.097,
+        "unit": "%"
+      },
+      "clay": {
+        "value": 56.2,
+        "unit": "%"
+      },
+      "silt": {
+        "value": 33.8,
+        "unit": "%"
+      },
+      "sand": {
+        "value": 9.95,
+        "unit": "%"
+      },
+      "organic_matter": {
+        "value": 0.76,
+        "unit": "%"
+      },
+      "texture": {
+        "value": "Clay",
+        "unit": "category"
+      }
+    }
+  },
+  "fields": [
+    {
+      "field_id": "maru_1",
+      "soil_measurements": null,
+      "soil_measurement_status": "missing",
+      "soil_scoring_status": "insufficient_field_data",
+      "reference_profile_id": "MARU_STUDY_2015_2017",
+      "reference_only": true
+    },
+    {
+      "field_id": "maru_2",
+      "soil_measurements": null,
+      "soil_measurement_status": "missing",
+      "soil_scoring_status": "insufficient_field_data",
+      "reference_profile_id": "MARU_STUDY_2015_2017",
+      "reference_only": true
+    },
+    {
+      "field_id": "maru_3",
+      "soil_measurements": null,
+      "soil_measurement_status": "missing",
+      "soil_scoring_status": "insufficient_field_data",
+      "reference_profile_id": "MARU_STUDY_2015_2017",
+      "reference_only": true
+    }
+  ],
+  "scoring_policy": {
+    "field_specific_scoring_allowed": false,
+    "reference_only_scoring": "Only if explicitly labeled simulation; never treat historical reference as three field measurements",
+    "requires": [
+      "field-level soil measurements and sampling dates",
+      "soil-score formula and crop-specific thresholds",
+      "methodology and units of EC and relevant fertility metrics"
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-﻿crop,family,legume,kc_mid,kc_end,season_days,sow_month,min_rain_mm,frost_sens,heat_c,income_level,source_url
-WHEAT,Poaceae,false,,,,,,,,,https://www.fao.org/4/s2022e/s2022e02.htm
-LENTIL,Fabaceae,true,,,,,,,,,https://www-pub.iaea.org/MTCD/Publications/PDF/te_1468_web.pdf
+crop,family,legume,kc_mid,kc_end,season_days,sow_month,min_rain_mm,frost_sens,heat_c,income_level,source_url
+WHEAT,Poaceae,false,1.15,0.40,240,11,,,,,https://www.fao.org/4/x0490e/x0490e0b.htm
+LENTIL,Fabaceae,true,1.10,0.30,170,11,,,,,https://www.fao.org/4/x0490e/x0490e0b.htm
 FALLOW,,false,,,,,,,,,https://www-pub.iaea.org/MTCD/Publications/PDF/te_1468_web.pdf

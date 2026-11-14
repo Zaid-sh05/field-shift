@@ -13,6 +13,7 @@ All roles write to and read from `data/`. These names and columns are fixed. If 
 | `validation.json` | Role 3 | NASA vs local station checks: temperature (raw, lapse-corrected, sensitivity 5–7 °C/km) and rainfall (POWER, IMERG) |
 | `crops.csv` | Role 4 | `crop, family, legume, kc_mid, kc_end, season_days, sow_month, min_rain_mm, frost_sens, heat_c, income_level, source_url` |
 | `soil.json` | Role 4 | `{field_id: {clay_pct, sand_pct, soc_gkg, ph, awc_mm, q05, q95}}` |
+| `soil_reference.json` | Role 4 | Published Maru research-site soil profile (NARC/JUST 2021). Reference only, **not** field measurements; use with low confidence |
 | `rotations.json` | Role 4 | `{field_id: [{id, name_ar, name_en, sequence: [crop, ...], is_current}]}` |
 | `explanations.json` | Role 5 | `{field_id: {rotation_id: {ar, en}}}` |
 
