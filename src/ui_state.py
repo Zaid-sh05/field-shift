@@ -9,10 +9,32 @@ KEY = "fieldshift_ui"
 
 
 def init_state(state: MutableMapping) -> dict:
-    if KEY not in state:
-        state[KEY] = {"selected_field": None, "language": "ar",
-                      "priorities": dict.fromkeys(CRITERIA), "screen": "field"}
+    current = state.get(KEY)
+    current = current if isinstance(current, dict) else {}
+    selected = current.get("selected_field")
+    state[KEY] = {
+        "selected_field": selected if isinstance(selected, str) and selected else None,
+        "language": current.get("language") if current.get("language") in ("ar", "en") else "ar",
+        "screen": current.get("screen") if current.get("screen") in SCREENS else "field",
+        "priorities": clean_preferences(current.get("priorities")),
+    }
     return deepcopy(state[KEY])
+
+
+def clean_preferences(values):
+    """Recover UI values only. None from Phase 1 migrates to default importance 3."""
+    values = values if isinstance(values, Mapping) else {}
+    return {key: values.get(key) if type(values.get(key)) is int and 1 <= values[key] <= 5 else 3
+            for key in CRITERIA}
+
+
+def get_preferences(state: MutableMapping) -> dict:
+    """Return six raw 1–5 preferences, NOT MCDA weights.
+
+    Role 5 must approve mapping before anything is submitted to ScoringProvider.
+    No normalization or scoring is performed here.
+    """
+    return init_state(state)["priorities"]
 
 
 def update_state(state: MutableMapping, **changes) -> dict:

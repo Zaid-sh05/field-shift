@@ -153,6 +153,6 @@ def render_frontend(*, adapter: DataAdapter | None = None, preview=False) -> Non
     if state["screen"] == "field":
         field.render(st, t, data.geojson, state, static=data.static)
     elif state["screen"] == "priorities":
-        priorities.render(st, t, state)
+        priorities.render(st, t, state, geojson=data.geojson)
     else:
         comparison.render(st, t, state, preview=preview)

@@ -9,6 +9,7 @@ body:has(.fieldshift-direction) {
 body:has(.fieldshift-direction) .stApp {
     background: #f6f8f3;
     font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    color: #1c3024;
 }
 body:has(.fieldshift-direction) h1,
 body:has(.fieldshift-direction) h2,
@@ -17,6 +18,58 @@ body:has(.fieldshift-direction) button,
 body:has(.fieldshift-direction) input,
 body:has(.fieldshift-direction) [data-testid="stMarkdownContainer"] {
     font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+}
+/* Streamlit theme tokens can override inherited colors on widget internals.
+   Scope overrides to Streamlit UI roots so Folium/Plotly retain their palettes. */
+body:has(.fieldshift-direction) .stApp [data-testid="stAppViewContainer"],
+body:has(.fieldshift-direction) [data-testid="stAppViewContainer"] .block-container {
+    color: #1c3024;
+}
+body:has(.fieldshift-direction) [data-testid="stWidgetLabel"] p,
+body:has(.fieldshift-direction) [data-testid="stMarkdownContainer"] p,
+body:has(.fieldshift-direction) [data-testid="stCaptionContainer"],
+body:has(.fieldshift-direction) [data-testid="stCaptionContainer"] p,
+body:has(.fieldshift-direction) [data-testid="stText"],
+body:has(.fieldshift-direction) [data-testid="stExpander"] summary,
+body:has(.fieldshift-direction) [data-testid="stExpander"] [data-testid="stMarkdownContainer"],
+body:has(.fieldshift-direction) [data-testid="stExpander"] [data-testid="stMarkdownContainer"] p,
+body:has(.fieldshift-direction) [data-testid="stAlert"] p,
+body:has(.fieldshift-direction) [data-testid="stAlert"] [data-testid="stMarkdownContainer"],
+body:has(.fieldshift-direction) [data-testid="stAlert"] [data-testid="stMarkdownContainer"] p,
+body:has(.fieldshift-direction) [data-testid="stNotification"] p,
+body:has(.fieldshift-direction) [data-testid="stNotification"] [data-testid="stMarkdownContainer"] p {
+    color: #1c3024 !important;
+}
+/* Labels/value text inside the native selectbox must remain dark on its light surface. */
+body:has(.fieldshift-direction) [data-testid="stSlider"] [data-testid="stTickBarMin"],
+body:has(.fieldshift-direction) [data-testid="stSlider"] [data-testid="stTickBarMax"],
+body:has(.fieldshift-direction) [data-testid="stSlider"] [data-testid="stThumbValue"] {
+    color: #1c3024 !important;
+    background-color: #f6f8f3;
+}
+body:has(.fieldshift-direction) [data-testid="stSelectbox"] label,
+body:has(.fieldshift-direction) [data-testid="stSelectbox"] [data-baseweb="select"] div,
+body:has(.fieldshift-direction) [data-testid="stSelectbox"] [data-baseweb="select"] input {
+    color: #17271d !important;
+}
+body:has(.fieldshift-direction) [data-testid="stSelectbox"] [data-baseweb="select"] {
+    background-color: #ffffff;
+}
+/* Explicitly contrast filled/dark buttons and preserve the outlined variant. */
+body:has(.fieldshift-direction) [data-testid="stButton"] button[kind="primary"] {
+    color: #ffffff !important;
+    background-color: #245b3d !important;
+    border-color: #245b3d !important;
+}
+body:has(.fieldshift-direction) [data-testid="stButton"] button[kind="secondary"] {
+    color: #1c3024 !important;
+    background-color: #ffffff !important;
+    border-color: #52705d !important;
+}
+body:has(.fieldshift-direction) [data-testid="stButton"] button:disabled {
+    color: #47574b !important;
+    background-color: #e5eae4 !important;
+    border-color: #9aa79b !important;
 }
 body:has(.fieldshift-direction) h1,
 body:has(.fieldshift-direction) h2,
@@ -39,6 +92,17 @@ body:has(.fieldshift-direction) .block-container {
 body:has(.fieldshift-direction) [data-testid="stAlert"] {
     border-radius: 0.65rem;
     border-inline-start: 4px solid var(--fs-green);
+    /* Streamlit applies severity-specific dark fills in some themes. Use one
+       pale neutral surface and keep severity icons/borders for differentiation. */
+    background-color: #fffdf5 !important;
+    color: #1c3024 !important;
+}
+body:has(.fieldshift-direction) [data-testid="stAlert"] > div,
+body:has(.fieldshift-direction) [data-testid="stAlert"] [data-testid="stAlertContent"],
+body:has(.fieldshift-direction) [data-testid="stAlert"] [data-testid="stMarkdownContainer"],
+body:has(.fieldshift-direction) [data-testid="stAlert"] [data-testid="stMarkdownContainer"] p {
+    background-color: transparent !important;
+    color: #1c3024 !important;
 }
 body:has(.fieldshift-direction) :focus-visible {
     outline: 3px solid #ad7412;
