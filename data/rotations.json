@@ -1,0 +1,98 @@
+{
+  "maru_1": [
+    {
+      "id": "WW",
+      "name_ar": "قمح ← قمح",
+      "name_en": "Wheat–wheat",
+      "sequence": [
+        "WHEAT",
+        "WHEAT"
+      ],
+      "is_current": null
+    },
+    {
+      "id": "WL",
+      "name_ar": "قمح ← عدس",
+      "name_en": "Wheat–lentil",
+      "sequence": [
+        "WHEAT",
+        "LENTIL"
+      ],
+      "is_current": null
+    },
+    {
+      "id": "WF",
+      "name_ar": "قمح ← بور",
+      "name_en": "Wheat–fallow",
+      "sequence": [
+        "WHEAT",
+        "FALLOW"
+      ],
+      "is_current": null
+    }
+  ],
+  "maru_2": [
+    {
+      "id": "WW",
+      "name_ar": "قمح ← قمح",
+      "name_en": "Wheat–wheat",
+      "sequence": [
+        "WHEAT",
+        "WHEAT"
+      ],
+      "is_current": null
+    },
+    {
+      "id": "WL",
+      "name_ar": "قمح ← عدس",
+      "name_en": "Wheat–lentil",
+      "sequence": [
+        "WHEAT",
+        "LENTIL"
+      ],
+      "is_current": null
+    },
+    {
+      "id": "WF",
+      "name_ar": "قمح ← بور",
+      "name_en": "Wheat–fallow",
+      "sequence": [
+        "WHEAT",
+        "FALLOW"
+      ],
+      "is_current": null
+    }
+  ],
+  "maru_3": [
+    {
+      "id": "WW",
+      "name_ar": "قمح ← قمح",
+      "name_en": "Wheat–wheat",
+      "sequence": [
+        "WHEAT",
+        "WHEAT"
+      ],
+      "is_current": null
+    },
+    {
+      "id": "WL",
+      "name_ar": "قمح ← عدس",
+      "name_en": "Wheat–lentil",
+      "sequence": [
+        "WHEAT",
+        "LENTIL"
+      ],
+      "is_current": null
+    },
+    {
+      "id": "WF",
+      "name_ar": "قمح ← بور",
+      "name_en": "Wheat–fallow",
+      "sequence": [
+        "WHEAT",
+        "FALLOW"
+      ],
+      "is_current": null
+    }
+  ]
+}
