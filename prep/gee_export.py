@@ -1,8 +1,9 @@
 """Role 3: export per-field satellite features from Google Earth Engine.
 
 Writes (see docs/DATA_CONTRACT.md):
-  data/sat_monthly.csv    ndvi (HLS 30 m), sm_rootzone (SMAP L4 9 km), tws_cm (GRACE)
+  data/sat_monthly.csv    ndvi (HLS 30 m), sm_rootzone (SMAP L4 9 km), precip_imerg_mm (GPM IMERG ~11 km), tws_cm (GRACE)
   data/field_history.csv  season classification from NDVI
+  data/ndvi_monthly_profile.csv  typical NDVI and bare-soil share per calendar month
   data/field_static.csv   elevation and slope (SRTM 30 m)
 
 Usage:
@@ -16,7 +17,7 @@ from pathlib import Path
 import ee
 import pandas as pd
 
-from features import add_anomaly, classify_seasons
+from features import add_anomaly, classify_seasons, monthly_profile
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
@@ -43,12 +44,23 @@ def hls_ndvi(region):
     return l30.merge(s30)
 
 
+def imerg_monthly_mm(region):
+    # IMERG monthly V07 stores the mean rate in mm/hr; convert to the month's total in mm.
+    def total(img):
+        d = img.date()
+        days = d.advance(1, "month").difference(d, "day")
+        return (img.select("precipitation").multiply(24).multiply(days).rename("value")
+                .copyProperties(img, ["system:time_start"]))
+    return ee.ImageCollection("NASA/GPM_L3/IMERG_MONTHLY_V07").filterBounds(region).map(total)
+
+
 # variable -> (collection factory, monthly composite, reduce scale m, native res m, sample at centroid?, months per request)
 # SMAP L4 is 3-hourly and global: more than one month per request exceeds the Earth Engine memory limit.
 PRODUCTS = {
     "ndvi": (hls_ndvi, "median", 30, 30, False, 12),
     "sm_rootzone": (lambda r: ee.ImageCollection("NASA/SMAP/SPL4SMGP/008").filterBounds(r).select(["sm_rootzone"], ["value"]),
                     "mean", 9000, 9000, True, 1),
+    "precip_imerg_mm": (imerg_monthly_mm, "mean", 11132, 11132, True, 12),
     "tws_cm": (lambda r: ee.ImageCollection("NASA/GRACE/MASS_GRIDS_V04/MASCON").filterBounds(r).select(["lwe_thickness"], ["value"]),
                "mean", 55000, 300000, True, 12),
 }
@@ -129,6 +141,7 @@ def main():
 
     ndvi = sat[sat["variable"] == "ndvi"][["field_id", "month", "value"]]
     classify_seasons(ndvi).to_csv(DATA / "field_history.csv", index=False)
+    monthly_profile(ndvi).to_csv(DATA / "ndvi_monthly_profile.csv", index=False)
     static_terrain(polys).to_csv(DATA / "field_static.csv", index=False)
     print(f"wrote {len(sat)} rows to data/sat_monthly.csv, plus field_history.csv and field_static.csv")
 

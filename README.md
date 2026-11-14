@@ -2,7 +2,9 @@
 
 > NASA Space Apps Challenge 2026 · Challenge: **Field Shift: Adapting Farms with NASA Data** · Local event: Jordan University of Science and Technology (JUST), 14–15 Nov 2026
 
-An Arabic-first decision-support tool. A farmer picks a field, sets their priorities (save water, earn more, healthier soil, less risk, less effort), and compares **three crop-rotation strategies side by side**, including the rotation the field is already using. Each strategy comes with a plain-language explanation, a 12-month bare-soil timeline, and a **confidence badge on every number**, so the farmer can see what the satellites actually observed and what is only an estimate.
+**Live app: https://field-shift-maru.streamlit.app**
+
+An Arabic-first decision-support tool for rainfed farms around **Maru, Irbid (northern Jordan)**. A farmer picks a field, sets their priorities, and compares **three crop-rotation strategies side by side**: wheat–wheat, wheat–lentil and wheat–fallow (the rotations tested at Maru in published trials), against the rotation the field is already using. Each strategy comes with a plain-language explanation, a 12-month bare-soil timeline, and a **confidence badge on every number**, so the farmer can see what the satellites actually observed and what is only an estimate.
 
 The tool supports the farmer's judgment. It does not replace the farmer or local agricultural extension officers.
 
@@ -14,6 +16,18 @@ The tool supports the farmer's judgment. It does not replace the farmer or local
 
 Rotation choices that fit the water budget and avoid known heat and frost windows are one of the few levers small farms control.
 
+## Study site: three fields at Maru
+
+Following our mentor's advice to go deep on one area with local data, we focus on Maru, a rainfed cereal area north-east of Irbid with published research-station records (NARC and JUST). We drew three real fields (5–8 ha each) over satellite imagery and pulled 11 years of NASA data for each.
+
+What the data showed:
+
+- **No fallow season in 11 years.** HLS NDVI shows a green winter crop on all three fields in every season from 2015 to 2025. The current practice is continuous winter cropping, which is the baseline we compare against. (NDVI cannot tell wheat from lentil, so the farmer confirms the crop.)
+- **NASA temperature runs hot here, and we know why.** The NASA POWER grid cell sits at 149 m; the Maru station is at 589 m. Against 18 months of published station data, the mean-temperature error is 2.37 °C raw and 0.56–0.96 °C after a standard lapse-rate correction (5–7 °C/km). The result holds across the whole range, so it does not depend on one tuned number.
+- **Both satellite rainfall products under-count.** NASA POWER and GPM IMERG each show about 22% less rain than the station over the same months, so rainfall is shown with medium confidence.
+
+Numbers are in [`data/validation.json`](data/validation.json), produced by [`prep/validate.py`](prep/validate.py).
+
 ## NASA and partner data used
 
 | Dataset | What we take from it | Native resolution | How we use it |
@@ -21,10 +35,11 @@ Rotation choices that fit the water budget and avoid known heat and frost window
 | NASA POWER (AG community) | Daily Tmax/Tmin, precipitation, radiation, root-zone wetness | ~0.5° | Frost and heat days, reference ET (ET0), water balance |
 | HLS (Harmonized Landsat Sentinel-2) | Red and NIR reflectance → NDVI | 30 m | When the field is green or bare, current rotation, bare-soil days |
 | SMAP L4 | Root-zone soil moisture | 9 km | Regional drought context and anomalies |
-| GPM IMERG | Precipitation | ~0.1° | Cross-check of POWER rainfall (uncertainty signal) |
+| GPM IMERG | Precipitation | ~0.1° | Independent rainfall check against POWER and the Maru station |
 | GRACE / GRACE-FO | Terrestrial water storage | ~3° mascons | Groundwater depletion trend for the basin |
-| SRTM | Elevation and slope | 30 m | Erosion and runoff risk per field |
+| SRTM | Elevation and slope | 30 m | Per-field elevation for the temperature correction; erosion risk |
 | FAO GAEZ, FAO-56, ICARDA | Crop suitability, crop coefficients (Kc), rotation evidence | – | Crop table and rotation rules |
+| Maru station (NARC, JUST) | Published monthly temperature and rain, soil | point | Ground truth for checking NASA data |
 
 Every number in the interface shows its source resolution next to it. Coarse products (9 km and up) are labelled **regional context**, not field measurements.
 
@@ -35,7 +50,9 @@ prep/ (runs before the demo)          data/ (files, the contract)        app.py 
 ──────────────────────────           ──────────────────────────         ─────────────────────
 fetch_power.py   ── NASA POWER ──►   climate_monthly.csv      ─┐
 gee_export.py    ── HLS, SMAP, ──►   sat_monthly.csv           ├──►  scoring + confidence ──► Streamlit UI (Arabic / English)
-                    GRACE, SRTM      field_history.csv         │     LLM explanations (cached)
+                    IMERG, GRACE,    field_history.csv         │     LLM explanations (cached)
+                    SRTM             ndvi_monthly_profile.csv  │
+validate.py      ── station data ─►  validation.json          ─┤
 crop table (FAO, ICARDA) ─────────►  crops.csv, soil.json,    ─┘
                                      rotations.json
 ```
@@ -49,8 +66,10 @@ The file formats are fixed in [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md). 
 ```text
 app.py                 Streamlit entry point (Role 1 wires it, Role 6 owns the UI)
 prep/                  Offline data scripts (Roles 2, 3, 4)
-  gee_export.py        HLS NDVI, SMAP, GRACE, SRTM per field → data/
-  features.py          Anomalies and season classification (pure pandas, self-tested)
+  fetch_power.py       NASA POWER climate, elevation-corrected per field → data/
+  gee_export.py        HLS NDVI, SMAP, IMERG, GRACE, SRTM per field → data/
+  validate.py          NASA vs Maru station checks → data/validation.json
+  features.py          Anomalies, season classification, NDVI monthly profile (pure pandas, self-tested)
 data/                  Generated data files + fields.geojson
 docs/                  Data contract, research notes
 requirements.txt       What the deployed app needs
@@ -73,6 +92,7 @@ To regenerate the satellite data (Role 3):
 pip install -r requirements-prep.txt
 earthengine authenticate
 python prep/gee_export.py --project YOUR_GEE_PROJECT
+python prep/validate.py --package PATH/TO/Maru_data --project YOUR_GEE_PROJECT
 python prep/features.py        # self-check: prints "ok"
 ```
 
@@ -82,7 +102,7 @@ python prep/features.py        # self-check: prints "ok"
 |---|---|---|
 | 1. Integration and deployment | Zaid | Repo, `app.py` wiring, deployment, submission page |
 | 2. Climate data | Sadeel | NASA POWER, IMERG, frost/heat/ET0 indicators |
-| 3. Satellite data | Dr. Hossam | HLS NDVI, SMAP, GRACE, SRTM, season classification |
+| 3. Satellite data | Dr. Hossam | HLS NDVI, SMAP, IMERG, GRACE, SRTM, season classification, validation |
 | 4. Agronomy and story | Kosay | Crop table, soil, field choice, rotations, video |
 | 5. Scoring and AI | Lana | Multi-criteria scoring, confidence, LLM explanations |
 | 6. Interface | Mohammad | Streamlit UI, Arabic RTL, cards and timeline |

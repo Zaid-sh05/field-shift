@@ -52,6 +52,17 @@ def classify_seasons(ndvi: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def monthly_profile(ndvi: pd.DataFrame) -> pd.DataFrame:
+    """Typical NDVI per field and calendar month, and the share of years the field was bare (NDVI < FALLOW_MAX)."""
+    d = ndvi.assign(cal_month=pd.to_datetime(ndvi["month"]).dt.month)
+    g = d.groupby(["field_id", "cal_month"])["value"]
+    return pd.DataFrame({
+        "ndvi_median": g.median().round(3),
+        "bare_share": g.apply(lambda v: (v < FALLOW_MAX).mean()).round(2),
+        "n_years": g.count(),
+    }).reset_index()
+
+
 def _selftest():
     months = pd.date_range("2021-11-01", "2022-09-01", freq="MS").strftime("%Y-%m")
     peak = {"A": ("2022-03", 0.6), "B": (None, 0), "C": ("2022-07", 0.55), "D": ("2022-02", 0.3)}
@@ -70,6 +81,9 @@ def _selftest():
     an = add_anomaly(ts)["anomaly"]
     assert an.iloc[-1] < -1 < 0 < an.iloc[0], an.tolist()
     assert add_anomaly(ts.head(2))["anomaly"].isna().all()  # too few years -> empty
+    prof = monthly_profile(pd.DataFrame({"field_id": "A", "month": ["2020-03", "2021-03", "2020-08"],
+                                         "value": [0.6, 0.1, 0.12]})).set_index("cal_month")
+    assert prof.loc[3, "bare_share"] == 0.5 and prof.loc[8, "bare_share"] == 1.0 and prof.loc[3, "n_years"] == 2
     print("ok")
 
 

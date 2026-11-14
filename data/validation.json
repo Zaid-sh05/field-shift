@@ -1,0 +1,46 @@
+{
+  "station": {
+    "lon": 35.85,
+    "lat": 32.55,
+    "elevation_m": 589,
+    "power_cell_elevation_m": 148.86,
+    "months": 18,
+    "period": "2015-10 to 2017-06",
+    "source": "published Maru station months (MARU_NARC_JUST_2021)"
+  },
+  "temperature_mean_c": {
+    "power_raw": {
+      "mae": 2.37,
+      "bias": 2.37
+    },
+    "power_lapse_corrected": {
+      "5.0": {
+        "mae": 0.56,
+        "bias": 0.17
+      },
+      "6.5": {
+        "mae": 0.81,
+        "bias": -0.49
+      },
+      "7.0": {
+        "mae": 0.96,
+        "bias": -0.71
+      }
+    },
+    "note": "6.5 °C/km is the standard atmosphere, not fitted to these months. Only mean temperature is checked; there is no local Tmax/Tmin, so heat and frost days are unverified."
+  },
+  "rain_mm": {
+    "station_total": 720.0,
+    "power": {
+      "mae": 14.99,
+      "bias": -9.29,
+      "total": 552.8
+    },
+    "imerg": {
+      "mae": 16.58,
+      "bias": -8.82,
+      "total": 561.3
+    },
+    "note": "18 months only: a check, not a calibration."
+  }
+}
