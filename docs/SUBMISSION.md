@@ -37,6 +37,10 @@ The tool supports the farmer's decision. It does not make it.
 - for every criterion, one plain sentence with the numbers behind the score;
 - a month-by-month calendar of crop and bare soil for each season of the rotation;
 - a panel showing how NASA data compared with the ground station;
+- a what-if simulator: move the rain and temperature sliders and the scores, the ranking and the advice update, labelled as a scenario and not a forecast;
+- a backtest: how each rotation would have held up in each of the 27 real seasons, including the 2024–25 drought;
+- a next-season advisor: the farmer enters the last three seasons' crops and gets the options ranked, with the rotation rules each one meets and the odds from the record;
+- an expected crop-vigour estimate from a small model trained on our own NASA data, shown with its error;
 - a confidence badge on every number: high for field-scale satellite data, medium for regional data checked against the ground, low for assumptions and reference values.
 
 **How it works.**
@@ -79,6 +83,8 @@ The tool supports the farmer's decision. It does not make it.
 - Heat and frost days are not verified against local maximum and minimum temperatures, so no score is built on them.
 - Crop water demand is potential demand for a well-watered crop, and NASA rain reads low here, so the water scores are conservative.
 - The harvest count is not income: we have no local prices, costs or yields.
+- The vigour model is small (11 seasons on three fields that share one rain series) and sees rain only. It is a modest aid, not a yield forecast.
+- Scenarios shift the observed record; they are not climate projections. They change the water and dry-year scores only.
 - NDVI cannot tell wheat from lentil, so the satellite history rules out wheat–fallow as the current rotation but cannot choose between the other two.
 
 ## 5. Use of NASA data and AI
@@ -99,7 +105,8 @@ The tool supports the farmer's decision. It does not make it.
 
 - **Claude (Anthropic)** helped with research and preparation, with writing and reviewing data-processing code, with analysis (the elevation check, validation and figures), and with drafting documentation. The team reviewed and ran all code.
 - **ChatGPT / Codex (OpenAI)** helped a teammate assemble the Maru data package from published sources.
-- **The app itself runs no AI model.** Scores come from a transparent rule-based engine, and the sentences on screen are fixed templates filled with its numbers. Nothing in the app recommends a rotation.
+- **The app runs no generative AI.** Scores and advice come from a transparent rule-based engine, and the sentences on screen are fixed templates filled with its numbers. Nothing in the app recommends a rotation.
+- **One small statistical model is trained on our own data:** a least-squares line that predicts the winter greenness peak (HLS NDVI) from season rain (NASA POWER), fitted on 33 field-seasons. Correlation 0.53. On seasons held out of training its error is 0.12 NDVI, against 0.15 for always guessing the mean. The app shows that error next to every estimate.
 - The 30-second video uses AI-generated illustrative footage (Google Flow), labelled as such on screen.
 - No AI-generated data is presented as measurement. Every number traces to a NASA dataset or a cited publication.
 

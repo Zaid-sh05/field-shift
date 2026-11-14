@@ -6,6 +6,8 @@
 
 An Arabic-first decision-support tool for rainfed farms around **Maru, Irbid (northern Jordan)**. A farmer picks a field, sets their priorities, and compares **three crop-rotation strategies side by side**: wheat–wheat, wheat–lentil and wheat–fallow (the rotations tested at Maru in published trials), against what the field has been doing. Each rotation gets a score for the farmer's own priorities, a plain sentence and the numbers behind every criterion, a month-by-month crop and bare-soil calendar, and a **confidence badge on every score**, so the farmer can see what the satellites observed and what is only an estimate.
 
+On top of the comparison, the farmer can simulate a drier or warmer season and watch the ranking move, see how each rotation would have fared in each of the 27 real seasons on record, and ask a next-season advisor what to grow after the last three seasons' crops. A small model trained on our own NASA data estimates crop vigour for the chosen rain, with its error shown.
+
 The tool supports the farmer's judgment. It does not replace the farmer or local agricultural extension officers.
 
 ## Why this matters
@@ -122,7 +124,8 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for how we work.
 
 In line with the Space Apps rules, we disclose AI use:
 
-- The app itself uses no AI model. Scores come from a transparent, rule-based engine, and the sentences on screen are fixed templates filled with its numbers. Nothing in the app recommends a rotation.
+- The app uses no generative AI. Scores and advice come from a transparent, rule-based engine, and the sentences on screen are fixed templates filled with its numbers. Nothing in the app recommends a rotation.
+- One small statistical model is trained on our own data: a least-squares line from season rain to the satellite greenness peak, fitted on 33 field-seasons and validated on held-out seasons (error 0.12 NDVI against 0.15 for guessing the mean).
 - AI assistants (Claude, ChatGPT) helped with research, with writing and reviewing code, with data analysis and with documentation. The team reviewed and ran everything.
 
 The final submission page lists the exact tools.

@@ -153,7 +153,15 @@
     "rule_no_third": "ليس ثالث موسم متتالٍ للمحصول نفسه",
     "adv_outlook": "ماذا قد يحدث: في {half_or_more} من {seasons} موسمًا غطّى المطر نصف حاجته أو أكثر. الموسم المعتاد يغطي {typical}%، والأسوأ {worst}%، والأفضل {best}%. حاجته نحو {demand_mm} ملم.",
     "adv_outlook_fallow": "ماذا قد يحدث: لا محصول ولا حصاد هذا الموسم، والتربة تبقى مكشوفة، لكن لا خسارة من الجفاف.",
-    "adv_legume_repeat": "تكرار البقوليات نفسها موسمين متتاليين يزيد أمراض التربة، لذلك وُضع هذا الخيار في آخر الترتيب مهما كانت درجته."
+    "adv_legume_repeat": "تكرار البقوليات نفسها موسمين متتاليين يزيد أمراض التربة، لذلك وُضع هذا الخيار في آخر الترتيب مهما كانت درجته.",
+    "vigor_rain": "مطر الموسم في هذا الوضع",
+    "vigor_ndvi": "قوة المحصول المتوقعة (قمة الخضرة)",
+    "vigor_clear": "التوقّع: محصول شتوي واضح الخضرة.",
+    "vigor_weak": "التوقّع: محصول ضعيف، خضرته بين التربة المكشوفة والمحصول الواضح.",
+    "vigor_failed": "التوقّع: خضرة بمستوى التربة المكشوفة، أي فشل المحصول على الأرجح.",
+    "vigor_model": "نموذج مدرَّب على بياناتنا: {points} موسم-حقل ({seasons} موسمًا × 3 حقول) من صور NASA HLS مقابل مطر NASA POWER. معامل الارتباط {r}. عند اختباره على مواسم لم يرها كان خطؤه {error} مقابل {mean_only_error} لو خمّنّا المتوسط دائمًا. النموذج يرى المطر فقط ولا يميّز القمح عن العدس.",
+    "vigor_extrapolated": "تنبيه: هذا المطر خارج المدى الذي تدرّب عليه النموذج ({rain_min}–{rain_max} ملم)، فالتوقّع أقل موثوقية.",
+    "adv_scenario": "الخيارات أدناه محسوبة للسيناريو الافتراضي: مطر {rain}% وحرارة +{warming} درجة."
   },
   "en": {
     "awaiting_rotation": "Awaiting rotation data",
@@ -309,6 +317,14 @@
     "rule_no_third": "not a third season in a row of the same crop",
     "adv_outlook": "What may happen: in {half_or_more} of {seasons} seasons rain covered half its need or more. A typical season covers {typical}%, the worst {worst}%, the best {best}%. It needs about {demand_mm} mm.",
     "adv_outlook_fallow": "What may happen: no crop and no harvest this season, and the soil stays bare, but nothing is lost to drought.",
-    "adv_legume_repeat": "Growing the same legume two seasons in a row builds up soil-borne disease, so this option is listed last whatever its score."
+    "adv_legume_repeat": "Growing the same legume two seasons in a row builds up soil-borne disease, so this option is listed last whatever its score.",
+    "vigor_rain": "Season rain in this setting",
+    "vigor_ndvi": "Expected crop vigour (greenness peak)",
+    "vigor_clear": "Expected: a clearly green winter crop.",
+    "vigor_weak": "Expected: a weak crop, between bare soil and a clear crop.",
+    "vigor_failed": "Expected: greenness at bare-soil level, so the crop most likely fails.",
+    "vigor_model": "A model trained on our own data: {points} field-seasons ({seasons} seasons × 3 fields) of NASA HLS imagery against NASA POWER rain. Correlation {r}. Tested on seasons it had not seen, its error was {error} against {mean_only_error} for always guessing the mean. It sees rain only and cannot tell wheat from lentil.",
+    "vigor_extrapolated": "Note: this rain is outside the range the model was trained on ({rain_min}–{rain_max} mm), so the estimate is less reliable.",
+    "adv_scenario": "The options below are computed for the what-if scenario: rain {rain}% and temperature +{warming} °C."
   }
 }

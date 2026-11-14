@@ -38,7 +38,7 @@ def _production_rotation_records(records):
     return safe
 
 
-def _scenario_controls(st, t, rotations, language):
+def _scenario_controls(st, t, rotations, language, field_id):
     """What-if sliders and the farmer's own answer about the current rotation. Returns (rain_factor, warming, current)."""
     with st.container(border=True, key="role6_card_scenario"):
         st.markdown(f'**{t("scenario_title")}**')
@@ -51,6 +51,14 @@ def _scenario_controls(st, t, rotations, language):
             st.warning(t("scenario_note").format(rain=rain, warming=warming))
         else:
             st.caption(t("scenario_hint"))
+        from .. import scoring
+        vigor, model = scoring.predict_vigor(field_id, 1 + rain / 100), scoring.vigor_model()
+        a, b = st.columns(2)
+        a.metric(t("vigor_rain"), f'{vigor["rain_mm"]} mm')
+        b.metric(t("vigor_ndvi"), f'{vigor["ndvi"]:.2f} ± {vigor["error"]:.2f}')
+        st.text(t(f'vigor_{vigor["state"]}'))
+        st.caption(t("vigor_model").format(**model) + (" " + t("vigor_extrapolated").format(**model)
+                                                        if vigor["extrapolated"] else ""))
     # Satellites ruled some rotations out (is_current false); only the farmer can settle the rest.
     possible = [r for r in rotations if r.get("is_current") is not False]
     names = {r["id"]: r.get(f"name_{language}") or r["id"] for r in possible}
@@ -96,7 +104,7 @@ def _render_backtest_table(st, t, field_id, names):
                  hide_index=True, width="stretch")
 
 
-def _render_advisor(st, t, field_id, preferences):
+def _render_advisor(st, t, field_id, preferences, rain_factor=1.0, warming_c=0.0):
     """Next-season advisor: the farmer enters the last three seasons, the rules and the NASA record answer."""
     from .. import scoring
     from ..ui_components.evidence import badge
@@ -113,7 +121,9 @@ def _render_advisor(st, t, field_id, preferences):
             st.info(t("advisor_prompt"))
             return
         history = [c for c in picks if c]
-        result = scoring.next_season(field_id, history, preferences)
+        result = scoring.next_season(field_id, history, preferences, rain_factor, warming_c)
+        if rain_factor != 1 or warming_c:
+            st.warning(t("adv_scenario").format(rain=round(100 * (rain_factor - 1)), warming=warming_c))
         moisture, last = result["soil_moisture"], result["last_season"]
         st.text(t("adv_history").format(history=" ← ".join(crop(c) for c in history)))
         st.caption(t("adv_last_driest" if last["driest"] else "adv_last_rain").format(
@@ -132,13 +142,13 @@ def _render_advisor(st, t, field_id, preferences):
         st.caption(t("advisor_limits"))
 
 
-def _render_scored(st, t, state, rotations, result, current=None):
+def _render_scored(st, t, state, rotations, result, current=None, rain_factor=1.0, warming_c=0.0):
     from .. import scoring
     render_scored_cards(st, t, rotations, result, state["language"], current=current)
     _render_replay(st, t, result["field_id"], rotations, state["language"])
     names = {r["id"]: r.get(f'name_{state["language"]}') or r["id"] for r in rotations}
     _render_backtest_table(st, t, result["field_id"], names)
-    _render_advisor(st, t, result["field_id"], get_preferences(st.session_state))
+    _render_advisor(st, t, result["field_id"], get_preferences(st.session_state), rain_factor, warming_c)
     st.markdown(f'**{t("timeline_title")}**')
     by_id = {r["id"]: r for r in rotations}
     for scored in result["rotations"]:
@@ -174,10 +184,10 @@ def render(st, t, state, *, preview=False, data=None):
         st.warning(DEMO_LABEL)
         st.caption(t("demo_limitations"))
     else:
-        rain_factor, warming, current = _scenario_controls(st, t, rotations, state["language"])
+        rain_factor, warming, current = _scenario_controls(st, t, rotations, state["language"], selected)
         result = _score(selected, preferences, rotations, rain_factor, warming)
         if result:
-            _render_scored(st, t, state, rotations, result, current)
+            _render_scored(st, t, state, rotations, result, current, rain_factor, warming)
             return
         st.info(t("scoring_pending"))
     render_cards(st, t, rotations, state["language"], demo=preview)

@@ -222,6 +222,46 @@ def backtest_summary(field_id):
     return out
 
 
+@lru_cache(maxsize=None)
+def vigor_model():
+    """A small model trained on this project's own NASA data: crop greenness from season rain.
+
+    Target: the winter NDVI peak of each field-season (HLS, 30 m). Input: rain over the wheat season from NASA
+    POWER, the same series the scenarios scale. Fitted by least squares on every field-season in
+    data/field_history.csv. The error is from leave-one-season-out validation (all fields of a season are held
+    out together, because they share the same rain), next to the error of always guessing the mean.
+    NDVI cannot tell wheat from lentil, so this is the vigour of "a winter crop", not of one species.
+    """
+    import numpy as np
+    history = pd.read_csv(DATA / "field_history.csv")
+    points = [(crop_seasons(r.field_id, "WHEAT")[int(r.season)]["rain_mm"], float(r.winter_max), int(r.season))
+              for r in history.itertuples() if int(r.season) in crop_seasons(r.field_id, "WHEAT")]
+    rain, peak, season = (np.array(v) for v in zip(*points))
+    slope, intercept = np.polyfit(rain, peak, 1)
+    model_err, mean_err = [], []
+    for held_out in np.unique(season):
+        train, test = season != held_out, season == held_out
+        b, a = np.polyfit(rain[train], peak[train], 1)
+        model_err += list(np.abs(a + b * rain[test] - peak[test]))
+        mean_err += list(np.abs(peak[train].mean() - peak[test]))
+    return {"slope_per_mm": float(slope), "intercept": float(intercept), "points": len(points),
+            "seasons": int(len(np.unique(season))), "r": round(float(np.corrcoef(rain, peak)[0, 1]), 2),
+            "error": round(float(np.mean(model_err)), 2), "mean_only_error": round(float(np.mean(mean_err)), 2),
+            "rain_min": round(float(rain.min())), "rain_max": round(float(rain.max()))}
+
+
+def predict_vigor(field_id, rain_factor=1.0):
+    """Expected winter greenness peak for a season with `rain_factor` times the field's mean season rain."""
+    model = vigor_model()
+    seasons = crop_seasons(field_id, "WHEAT")
+    rain = rain_factor * sum(v["rain_mm"] for v in seasons.values()) / len(seasons)
+    ndvi = min(1.0, max(0.0, model["intercept"] + model["slope_per_mm"] * rain))
+    return {"rain_mm": round(rain), "ndvi": round(ndvi, 2), "error": model["error"],
+            # same thresholds the season classifier uses (prep/features.py): 0.40 clear crop, 0.25 bare soil
+            "state": "clear" if ndvi >= 0.40 else "weak" if ndvi >= 0.25 else "failed",
+            "extrapolated": not model["rain_min"] <= rain <= model["rain_max"]}
+
+
 def soil_moisture_now(field_id):
     """Latest SMAP root-zone moisture for the field's ~9 km cell, as a z-score against the same calendar month."""
     sat = pd.read_csv(DATA / "sat_monthly.csv")
@@ -231,7 +271,7 @@ def soil_moisture_now(field_id):
     return {"month": last.month, "anomaly": round(z, 1), "state": "dry" if z <= -1 else "wet" if z >= 1 else "normal"}
 
 
-def next_season(field_id, history, weights):
+def next_season(field_id, history, weights, rain_factor=1.0, warming_c=0.0):
     """Options for the coming season, given what the farmer grew before (oldest first, most recent last).
 
     Each option (every crop in data/crops.csv, including fallow) is scored on the same five criteria:
@@ -240,7 +280,8 @@ def next_season(field_id, history, weights):
                     window; not a third season in a row of the same crop
       bare, income  whether the season has a crop on the ground and a harvest
     An option that repeats the same legume is listed last whatever its score (`legume_repeat`).
-    `outlook` gives the odds from the record. It is not a weather forecast: nobody knows the coming rain.
+    `rain_factor` and `warming_c` apply the same what-if climate as evaluate().
+    `outlook` gives the odds from the record (shifted by the scenario, if any). It is not a weather forecast: nobody knows the coming rain.
     """
     _, crops, profile, _, _ = _tables()
     history = list(history)
@@ -249,7 +290,8 @@ def next_season(field_id, history, weights):
     if set(weights) != set(CRITERIA) or sum(weights.values()) <= 0:
         raise ValueError("weights must cover: " + ", ".join(CRITERIA))
     green = float((1 - profile[profile.field_id == field_id].bare_share).sum())
-    wheat = crop_seasons(field_id, "WHEAT")
+    observed = crop_seasons(field_id, "WHEAT")
+    wheat = crop_seasons(field_id, "WHEAT", rain_factor, warming_c)
     dry_years = sorted(wheat, key=lambda y: wheat[y]["rain_mm"])[:max(1, math.ceil(len(wheat) * DRY_SHARE))]
     options = []
     for crop in crops.index:
@@ -260,7 +302,7 @@ def next_season(field_id, history, weights):
             "legume": any(bool(crops.loc[c].legume) for c in window),
             "no_third": not (grown and len(history) >= 2 and history[-1] == history[-2] == crop),
         }
-        seasons = crop_seasons(field_id, crop) if grown else {}
+        seasons = crop_seasons(field_id, crop, rain_factor, warming_c) if grown else {}
         met = sorted(v["met"] for v in seasons.values())
         criteria = {
             "water": 100 * sum(met) / len(met) if grown else 100.0,
@@ -284,8 +326,8 @@ def next_season(field_id, history, weights):
     last_year = max(wheat)
     return {"options": options, "close_call": options[0]["total"] - options[1]["total"] < CLOSE_MARGIN,
             "soil_moisture": soil_moisture_now(field_id),
-            "last_season": {"year": last_year, "rain_mm": round(wheat[last_year]["rain_mm"]),
-                            "driest": last_year == dry_years[0]}}
+            "last_season": {"year": last_year, "rain_mm": round(observed[last_year]["rain_mm"]),
+                            "driest": last_year == min(observed, key=lambda y: observed[y]["rain_mm"])}}
 
 
 def crop_calendar(sequence, start_month=10):

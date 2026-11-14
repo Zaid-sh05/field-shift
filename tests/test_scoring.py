@@ -117,6 +117,28 @@ class ScoringTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 s.next_season("maru_1", bad, EQUAL)
 
+    def test_vigor_model_is_trained_validated_and_modest(self):
+        model = s.vigor_model()
+        self.assertEqual((model["points"], model["seasons"]), (33, 11))
+        self.assertGreater(model["slope_per_mm"], 0)                    # more rain, greener crop
+        self.assertLess(model["error"], model["mean_only_error"])       # beats guessing the mean on unseen seasons
+        self.assertTrue(0.4 < model["r"] < 0.8, model["r"])             # a real but moderate link: do not oversell
+        normal, drought = s.predict_vigor("maru_1"), s.predict_vigor("maru_1", 0.5)
+        self.assertGreater(normal["ndvi"], drought["ndvi"])
+        self.assertEqual(normal["state"], "clear")
+        self.assertFalse(normal["extrapolated"])
+        self.assertTrue(s.predict_vigor("maru_1", 2.0)["extrapolated"])
+
+    def test_drought_scenario_changes_the_next_season_advice(self):
+        water_first = {"water": 5, "risk": 5, "soil": 1, "bare": 1, "income": 1}
+        normal = {o["crop"]: o for o in s.next_season("maru_1", ["LENTIL", "WHEAT"], water_first)["options"]}
+        drought = {o["crop"]: o for o in s.next_season("maru_1", ["LENTIL", "WHEAT"], water_first, rain_factor=0.5)["options"]}
+        self.assertLess(drought["LENTIL"]["criteria"]["water"], normal["LENTIL"]["criteria"]["water"])
+        self.assertLess(drought["WHEAT"]["outlook"]["half_or_more"], normal["WHEAT"]["outlook"]["half_or_more"])
+        self.assertEqual(drought["FALLOW"]["criteria"]["water"], 100)
+        gap = lambda o: o["FALLOW"]["total"] - o["LENTIL"]["total"]
+        self.assertGreater(gap(drought), gap(normal))  # the drier it gets, the better resting the land looks
+
     def test_backtest_summary_matches_the_replay(self):
         summary, replay = s.backtest_summary("maru_1"), s.season_replay("maru_1")
         self.assertEqual(summary["WW"]["worst_year"], 2025)

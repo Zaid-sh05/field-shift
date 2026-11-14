@@ -92,6 +92,17 @@ class ComparisonTests(unittest.TestCase):
         self.assertIn(translate("crop_LENTIL"), ranked[0])  # after three wheat seasons a legume comes first
         self.assertTrue(any("✗ " + translate("rule_no_third") in c.value for c in at.caption))
 
+    def test_rain_slider_moves_the_vigour_estimate_and_the_advisor(self):
+        at = comparison_app(False)
+        vigour = lambda: next(m.value for m in at.metric if m.label == translate("vigor_ndvi"))
+        normal = vigour()
+        at.selectbox(key="fieldshift_history_2").set_value("WHEAT").run(timeout=30)
+        self.assertFalse(any(w.value.startswith(translate("adv_scenario")[:25]) for w in at.warning))
+        at.slider(key="fieldshift_scenario_rain").set_value(-50).run(timeout=30)
+        self.assertEqual(len(at.exception), 0)
+        self.assertLess(float(vigour().split(" ")[0]), float(normal.split(" ")[0]))
+        self.assertTrue(any(w.value.startswith(translate("adv_scenario")[:25]) for w in at.warning))
+
     def test_supplied_contract_rotation_without_fabricated_scores(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)
