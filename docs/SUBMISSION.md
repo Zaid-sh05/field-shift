@@ -1,6 +1,6 @@
 # Submission drafts (NASA Space Apps 2026)
 
-Drafts for the submission page. Items marked **[TEAM]** need a teammate to confirm before we paste them.
+Drafts for the submission page. The one item marked **[TEAM]** (the slide deck link) is still open.
 Deadline: **Sunday 15 Nov 2026, 11:59 PM**.
 
 ---
@@ -9,7 +9,7 @@ Deadline: **Sunday 15 Nov 2026, 11:59 PM**.
 
 Field Shift is an Arabic-first crop-rotation explorer for rainfed farms around Maru, Irbid, in northern Jordan, one of the most water-scarce countries on Earth. A farmer picks their field, sets what matters to them, and compares three rotations side by side (wheat–wheat, wheat–lentil, wheat–fallow) against what the field is already doing.
 
-The current rotation is not guessed: 11 years of NASA HLS satellite imagery show that our three study fields were never left fallow: in 31 of 33 field-seasons since 2015 they carried a clear winter crop, and the other 2 were borderline green, never bare. Every number the farmer sees carries a confidence badge, because we tested NASA data against the ground before trusting it. Near Maru, NASA POWER temperatures ran 2.4 °C too warm because its grid cell sits 440 m lower than the farm. We corrected for elevation and cut the error by two thirds. Satellite rainfall still misses about 22% of local rain, so the tool says so.
+The current rotation is not guessed: 11 years of NASA HLS satellite imagery show that our three study fields were never left fallow: in 31 of 33 field-seasons since 2015 they carried a clear winter crop, and the other 2 were borderline green, never bare. Every number the farmer sees carries a confidence badge, because we tested NASA data against the ground before trusting it. Near Maru, NASA POWER temperatures ran 2.4 °C too warm because its grid cell sits 440 m lower than the farm. We corrected for elevation and cut the error by two thirds. Satellite rainfall still misses about 22% of local rain, so the tool says so. The same data shows why this matters now: 2024–25 was the driest season in 27 years, 55% below normal, and the satellites watched the crop's greenness fall by almost half.
 
 The tool supports the farmer's decision. It does not make it.
 
@@ -20,6 +20,7 @@ The tool supports the farmer's decision. It does not make it.
 - `ndvi_history.png`: 11 years of NDVI for the three fields (no fallow year)
 - `temperature_check.png`: station vs NASA POWER, raw and elevation-corrected
 - `rain_check.png`: station vs NASA POWER vs GPM IMERG rainfall
+- `drought_2025.png`: season rain and crop greenness, 2016–2025 (the 2024–25 drought)
 
 ## 3. Final project link
 
@@ -31,9 +32,11 @@ The tool supports the farmer's decision. It does not make it.
 **What it does.** For each field, the app shows:
 
 - the rotation the field is using today, read from satellite vegetation history;
-- three alternative rotations scored on the farmer's own priorities **[TEAM: Lana to confirm the final criteria]**;
-- a plain-language explanation for each option;
-- a 12-month bare-soil timeline;
+- what the satellites saw on the field: 11 years of greenness, the crop history, season rain, the 2024–25 drought, and soil;
+- three rotations scored on the farmer's own priorities, set with five sliders;
+- for every criterion, one plain sentence with the numbers behind the score;
+- a month-by-month calendar of crop and bare soil for each season of the rotation;
+- a panel showing how NASA data compared with the ground station;
 - a confidence badge on every number: high for field-scale satellite data, medium for regional data checked against the ground, low for assumptions and reference values.
 
 **How it works.**
@@ -50,10 +53,17 @@ The tool supports the farmer's decision. It does not make it.
    - Temperature error drops from 2.37 °C to 0.56–0.96 °C after the elevation correction. The range covers any lapse rate from 5 to 7 °C/km, so the result does not hinge on one tuned number.
    - NASA POWER and IMERG both under-count rain by about 22%.
 5. *Season reading.* A rule-based classifier labels each field-season from NDVI as winter crop, irrigated summer, fallow or uncertain. NDVI cannot tell wheat from lentil, so the farmer confirms the crop.
-6. *Scoring.* **[TEAM: Lana]** A transparent multi-criteria score, weighted by the farmer's priorities, with a "close call" flag when the ranking flips under small weight changes.
-7. *Interface.* **[TEAM: Mohammad]** Streamlit, Arabic right-to-left. The app reads prepared files only, so it keeps working on weak internet.
+6. *Scoring.* Five criteria, each a physical quantity or a counted practice rather than a fitted number:
+   - *Saving water:* the share of crop water demand that rain covers, averaged over 27 seasons. Demand is FAO-56 Penman-Monteith evapotranspiration from NASA POWER, times FAO-56 crop coefficients.
+   - *Holding up in dry years:* the same share in the driest fifth of seasons only.
+   - *Soil health:* practices present out of two (a legume in the rotation; no cereal directly after the same cereal).
+   - *Soil cover:* months a year the field is green, as HLS observed it on that field. A fallow year counts as bare.
+   - *Harvests:* the share of seasons that end in a harvest. We assume no prices or yields.
 
-**Tools.** Python, Google Earth Engine, pandas, Streamlit, folium, Plotly, matplotlib, GitHub, Streamlit Community Cloud.
+   The farmer's sliders are the weights. The app flags a close call when the top two are within 5 points or when a 10% change in one weight flips the order, and it warns when the farmer's top priority rests on low-confidence data. It ranks; it never recommends.
+7. *Interface.* Streamlit, Arabic right-to-left with an English switch. The app reads prepared files only, so it keeps working on weak internet.
+
+**Tools.** Python, Google Earth Engine, pandas, Streamlit, folium, matplotlib, pytest, GitHub, Streamlit Community Cloud.
 
 **Goals.**
 
@@ -66,7 +76,10 @@ The tool supports the farmer's decision. It does not make it.
 - One site and three fields.
 - An 18-month ground check, which is a check, not a calibration.
 - No field-level soil measurements: we show the published Maru profile as a low-confidence reference.
-- Heat days are not yet verified against local maximum temperatures.
+- Heat and frost days are not verified against local maximum and minimum temperatures, so no score is built on them.
+- Crop water demand is potential demand for a well-watered crop, and NASA rain reads low here, so the water scores are conservative.
+- The harvest count is not income: we have no local prices, costs or yields.
+- NDVI cannot tell wheat from lentil, so the satellite history rules out wheat–fallow as the current rotation but cannot choose between the other two.
 
 ## 5. Use of NASA data and AI
 
@@ -86,7 +99,8 @@ The tool supports the farmer's decision. It does not make it.
 
 - **Claude (Anthropic)** helped with research and preparation, with writing and reviewing data-processing code, with analysis (the elevation check, validation and figures), and with drafting documentation. The team reviewed and ran all code.
 - **ChatGPT / Codex (OpenAI)** helped a teammate assemble the Maru data package from published sources.
-- **[TEAM: Lana]** In the app, an LLM writes plain-language explanations from scores the engine has already computed. It never chooses the recommended rotation. Name the model here.
+- **The app itself runs no AI model.** Scores come from a transparent rule-based engine, and the sentences on screen are fixed templates filled with its numbers. Nothing in the app recommends a rotation.
+- The 30-second video uses AI-generated illustrative footage (Google Flow), labelled as such on screen.
 - No AI-generated data is presented as measurement. Every number traces to a NASA dataset or a cited publication.
 
 ## 6. References
@@ -104,13 +118,14 @@ The tool supports the farmer's decision. It does not make it.
 **Other data and tools**
 
 - ECMWF ERA5-Land daily aggregates (used only to cross-check heat days). `ECMWF/ERA5_LAND/DAILY_AGGR`
+- SoilGrids 250 m v2.0, ISRIC (soil per field). https://soilgrids.org/ · `projects/soilgrids-isric`
 - Google Earth Engine. https://earthengine.google.com/
 
 **Local and agronomic sources**
 
 - Maru station weather and soil, NARC/JUST study. https://doi.org/10.15159/AR.20.236
 - Maru rotation trials (wheat–wheat, wheat–lentil, wheat–fallow), IAEA TECDOC-1468. https://www-pub.iaea.org/MTCD/Publications/PDF/te_1468_web.pdf
-- FAO Irrigation and Drainage Paper 56, crop coefficients. https://www.fao.org/4/x0490e/x0490e0b.htm
+- FAO Irrigation and Drainage Paper 56: Penman-Monteith reference evapotranspiration, crop coefficients (Table 12) and growth-stage lengths (Table 11). https://www.fao.org/4/x0490e/x0490e00.htm
 - FAO crop water needs. https://www.fao.org/4/s2022e/s2022e02.htm
 - FAO crop rotation guidance. https://www.fao.org/4/Y5146E/y5146e0a.htm
 

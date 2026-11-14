@@ -4,7 +4,7 @@
 
 **Live app: https://field-shift-maru.streamlit.app**
 
-An Arabic-first decision-support tool for rainfed farms around **Maru, Irbid (northern Jordan)**. A farmer picks a field, sets their priorities, and compares **three crop-rotation strategies side by side**: wheat–wheat, wheat–lentil and wheat–fallow (the rotations tested at Maru in published trials), against the rotation the field is already using. Each strategy comes with a plain-language explanation, a 12-month bare-soil timeline, and a **confidence badge on every number**, so the farmer can see what the satellites actually observed and what is only an estimate.
+An Arabic-first decision-support tool for rainfed farms around **Maru, Irbid (northern Jordan)**. A farmer picks a field, sets their priorities, and compares **three crop-rotation strategies side by side**: wheat–wheat, wheat–lentil and wheat–fallow (the rotations tested at Maru in published trials), against what the field has been doing. Each rotation gets a score for the farmer's own priorities, a plain sentence and the numbers behind every criterion, a month-by-month crop and bare-soil calendar, and a **confidence badge on every score**, so the farmer can see what the satellites observed and what is only an estimate.
 
 The tool supports the farmer's judgment. It does not replace the farmer or local agricultural extension officers.
 
@@ -24,7 +24,8 @@ What the data showed:
 
 - **No fallow season in 11 years.** HLS NDVI shows a clear winter crop in 31 of 33 field-seasons from 2015 to 2025; the other 2 are borderline green, and none is bare. The current practice is continuous winter cropping, which is the baseline we compare against. (NDVI cannot tell wheat from lentil, so the farmer confirms the crop.)
 - **NASA temperature runs hot here, and we know why.** The NASA POWER grid cell sits at 149 m; the Maru station is at 589 m. Against 18 months of published station data, the mean-temperature error is 2.37 °C raw and 0.56–0.96 °C after a standard lapse-rate correction (5–7 °C/km). The result holds across the whole range, so it does not depend on one tuned number.
-- **Both satellite rainfall products under-count.** NASA POWER and GPM IMERG each show about 22% less rain than the station over the same months, so rainfall is shown with medium confidence.
+- **Both satellite rainfall products under-count.** NASA POWER and GPM IMERG show 23% and 22% less rain than the station over the same months, so rainfall is shown with medium confidence.
+- **2024–25 was the driest season on record, and the satellites saw the crop suffer.** NASA POWER puts it 55% below the mean of the other 26 seasons, GPM IMERG 56% below, and the HLS greenness peak averaged over the three fields fell from 0.82 to 0.48.
 
 Numbers are in [`data/validation.json`](data/validation.json), produced by [`prep/validate.py`](prep/validate.py).
 
@@ -32,16 +33,18 @@ Numbers are in [`data/validation.json`](data/validation.json), produced by [`pre
 
 | Dataset | What we take from it | Native resolution | How we use it |
 |---|---|---|---|
-| NASA POWER (AG community) | Daily Tmax/Tmin, precipitation, radiation, root-zone wetness | ~0.5° | Frost and heat days, reference ET (ET0), water balance |
-| HLS (Harmonized Landsat Sentinel-2) | Red and NIR reflectance → NDVI | 30 m | When the field is green or bare, current rotation, bare-soil days |
-| SMAP L4 | Root-zone soil moisture | 9 km | Regional drought context and anomalies |
-| GPM IMERG | Precipitation | ~0.1° | Independent rainfall check against POWER and the Maru station |
-| GRACE / GRACE-FO | Terrestrial water storage | ~3° mascons | Groundwater depletion trend for the basin |
+| NASA POWER (AG community) | Daily temperature, precipitation, radiation, humidity, wind | ~0.5° | Crop water demand (FAO-56 Penman-Monteith) against rain, in all seasons and in dry seasons |
+| HLS (Harmonized Landsat Sentinel-2) | Red and NIR reflectance → NDVI | 30 m | Crop history per field, which rotation is ruled out, months the soil is green |
+| SMAP L4 | Root-zone soil moisture | 9 km | Extracted per field as regional context; not used in the scores |
+| GPM IMERG | Precipitation | ~0.1° | Season rain per field; independent rainfall check against POWER and the Maru station |
+| GRACE / GRACE-FO | Terrestrial water storage | ~3° mascons | Extracted as regional context; not used in the scores |
 | SRTM | Elevation and slope | 30 m | Per-field elevation for the temperature correction; erosion risk |
-| FAO GAEZ, FAO-56, ICARDA | Crop suitability, crop coefficients (Kc), rotation evidence | – | Crop table and rotation rules |
+| FAO-56, FAO rotation guidance, IAEA Maru trials | Crop coefficients and growth stages, rotation evidence | – | Crop table and the soil-health rule |
+| SoilGrids (ISRIC) | Clay, sand, organic carbon, pH | 250 m | Soil per field, shown as modelled |
+| ERA5-Land (ECMWF) | Daily maximum temperature | ~9 km | Cross-check only: it showed POWER heat days are overstated |
 | Maru station (NARC, JUST) | Published monthly temperature and rain, soil | point | Ground truth for checking NASA data |
 
-Every number in the interface shows its source resolution next to it. Coarse products (9 km and up) are labelled **regional context**, not field measurements.
+Every score in the interface names its source and carries a confidence level: high for field-scale satellite observation, medium for regional data checked against the station, low for rules and counts with no local measurement.
 
 ## How it works
 
@@ -49,8 +52,8 @@ Every number in the interface shows its source resolution next to it. Coarse pro
 prep/ (runs before the demo)          data/ (files, the contract)        app.py (live demo)
 ──────────────────────────           ──────────────────────────         ─────────────────────
 fetch_power.py   ── NASA POWER ──►   climate_monthly.csv      ─┐
-gee_export.py    ── HLS, SMAP, ──►   sat_monthly.csv           ├──►  scoring + confidence ──► Streamlit UI (Arabic / English)
-                    IMERG, GRACE,    field_history.csv         │     LLM explanations (cached)
+gee_export.py    ── HLS, SMAP, ──►   sat_monthly.csv           ├──►  src/scoring.py ──► Streamlit UI (Arabic / English)
+                    IMERG, GRACE,    field_history.csv         │     scores + confidence
                     SRTM             ndvi_monthly_profile.csv  │
 validate.py      ── station data ─►  validation.json          ─┤
 crop table (FAO, ICARDA) ─────────►  crops.csv, soil.json,    ─┘
@@ -65,6 +68,7 @@ The file formats are fixed in [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md). 
 
 ```text
 app.py                 Streamlit entry point (Role 1 wires it, Role 6 owns the UI)
+src/scoring.py         Rotation scoring: five criteria, the farmer's weights, honesty flags
 src/                   Role 6 interface: screens, components, state, translations (i18n.json)
 styles/                Role 6 design system (main.css)
 tests/                 Interface tests (python -m pytest tests)
@@ -72,6 +76,8 @@ prep/                  Offline data scripts (Roles 2, 3, 4)
   fetch_power.py       NASA POWER climate, elevation-corrected per field → data/
   gee_export.py        HLS NDVI, SMAP, IMERG, GRACE, SRTM per field → data/
   validate.py          NASA vs Maru station checks → data/validation.json
+  field_context.py     Season rain (IMERG) and soil (SoilGrids) per field → data/
+  figures.py           Slide figures → docs/figures/
   features.py          Anomalies, season classification, NDVI monthly profile (pure pandas, self-tested)
 data/                  Generated data files + fields.geojson
 docs/                  Data contract, research notes
@@ -116,8 +122,8 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for how we work.
 
 In line with the Space Apps rules, we disclose AI use:
 
-- An LLM writes the plain-language explanations from numbers our scoring engine has already computed. It never picks the recommended rotation.
-- AI coding assistants helped with research and with parts of the code.
+- The app itself uses no AI model. Scores come from a transparent, rule-based engine, and the sentences on screen are fixed templates filled with its numbers. Nothing in the app recommends a rotation.
+- AI assistants (Claude, ChatGPT) helped with research, with writing and reviewing code, with data analysis and with documentation. The team reviewed and ran everything.
 
 The final submission page lists the exact tools.
 
@@ -132,4 +138,3 @@ The final submission page lists the exact tools.
 - **كل واحد بيشتغل بملفاته بس**، على branch باسمه، وبيفتح Pull Request. الدمج على `main` بيعمله الدور 1 بس.
 - **شكل الملفات ثابت** ومكتوب بـ `docs/DATA_CONTRACT.md`. إذا بدك تغيّر عمود، احكي مع الدور 1 أول.
 - **ممنوع ترفع أي مفتاح API** للـ repo. المفاتيح بتنحط بـ `.streamlit/secrets.toml`، وهاد الملف مستثنى من git.
-- **مهامك موجودة كـ Issue** على GitHub باسم دورك.

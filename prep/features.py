@@ -40,7 +40,7 @@ def classify_seasons(ndvi: pd.DataFrame) -> pd.DataFrame:
 
     def label(r):
         if r.summer_max >= CROP_MIN:
-            return "irrigated_summer"  # green in the dry season = irrigated
+            return "summer_green"  # green in the dry season: irrigation, or weeds on a rainfed field
         if r.winter_max >= CROP_MIN:
             return "winter_crop"
         if r.winter_max < FALLOW_MAX:
@@ -71,7 +71,7 @@ def _selftest():
         for f, (pm, v) in peak.items() for mo in months
     ]
     got = classify_seasons(pd.DataFrame(rows)).set_index("field_id")["class"].to_dict()
-    assert got == {"A": "winter_crop", "B": "fallow", "C": "irrigated_summer", "D": "uncertain"}, got
+    assert got == {"A": "winter_crop", "B": "fallow", "C": "summer_green", "D": "uncertain"}, got
     unfinished = pd.DataFrame({"field_id": "A", "month": ["2025-11", "2025-12"], "value": [0.15, 0.15]})
     assert classify_seasons(unfinished).empty  # Nov-Dec only: season not judged, not "fallow"
 

@@ -181,7 +181,7 @@ def main():
             continue
 
         mean = sum(numbers) / len(numbers)
-        variance = sum((x - mean) ** 2 for x in numbers) / len(numbers)
+        variance = sum((x - mean) ** 2 for x in numbers) / (len(numbers) - 1)  # sample std, as in prep/features.py
         std = math.sqrt(variance)
 
        

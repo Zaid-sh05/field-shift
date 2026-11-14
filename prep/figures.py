@@ -68,13 +68,38 @@ def rain_check():
     return fig
 
 
+def drought():
+    sat = pd.read_csv(DATA / "sat_monthly.csv")
+    rain = sat[sat.variable == "precip_imerg_mm"].copy()
+    when = pd.to_datetime(rain.month)
+    rain = rain[(when.dt.month >= 10) | (when.dt.month <= 6)]
+    rain["season"] = when.dt.year + (when.dt.month >= 10)
+    g = rain.groupby(["field_id", "season"]).value
+    totals = g.sum()[g.count() == 9].groupby("season").mean()  # complete Oct-Jun seasons, mean of the three fields
+    peak = pd.read_csv(DATA / "field_history.csv").groupby("season").winter_max.mean().reindex(totals.index)
+    labels = [f"{y - 1}-{str(y)[2:]}" for y in totals.index]
+    fig, ax = plt.subplots(figsize=(12, 4.5))
+    bars = ax.bar(labels, totals, color=["#e76f51" if y == totals.idxmin() else "#8ab6d6" for y in totals.index])
+    ax.bar_label(bars, fmt="%.0f")
+    ax.set_ylabel("Oct-Jun rain, GPM IMERG (mm)")
+    ax.set_ylim(0, totals.max() * 1.3)  # headroom so the legend clears the bars
+    ax2 = ax.twinx()
+    ax2.plot(labels, peak, "o-", color="#2a9d8f", lw=2.2, label="Crop greenness peak (HLS NDVI, mean of 3 fields)")
+    ax2.set_ylim(0, 1); ax2.set_ylabel("NDVI peak"); ax2.spines["right"].set_visible(True)
+    ax2.legend(frameon=False, loc="upper left")
+    drop = round(100 - 100 * totals.min() / totals.drop(totals.idxmin()).mean())
+    ax.set_title(f"{labels[-1]}: {drop}% less rain than the other seasons, and the satellites saw the crop suffer",
+                 loc="left")
+    return fig
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--package", required=True, help="folder with 09_nasa_local_comparison.csv")
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     for name, fig in [("ndvi_history", ndvi_history()), ("temperature_check", temperature_check(args.package)),
-                      ("rain_check", rain_check())]:
+                      ("rain_check", rain_check()), ("drought_2025", drought())]:
         fig.tight_layout()
         fig.savefig(OUT / f"{name}.png", dpi=160)
         print("wrote", OUT / f"{name}.png")
