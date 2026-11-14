@@ -13,7 +13,7 @@ from dataclasses import dataclass, field as dataclass_field
 from pathlib import Path
 from typing import Protocol
 
-from .ui_state import init_state, update_state, validate_weights
+from .ui_state import init_state, update_state, validate_weights, valid_is_current
 from .ui_i18n import translate
 
 
@@ -59,9 +59,7 @@ class FileDataAdapter:
             if not isinstance(field_id, str) or not field_id or field_id in seen:
                 return FieldData(empty, ("fields.geojson: missing or duplicate field ID",))
             seen.add(field_id)
-            if props.get("zone") not in ("valley", "highland", "azraq"):
-                issues.append(f"{field_id}: zone outside DATA_CONTRACT")
-            for key in ("name_ar", "name_en", "rain_mm"):
+            for key in ("name_ar", "name_en"):
                 if props.get(key) is None:
                     issues.append(f"{field_id}: {key} unavailable")
         static = {}
@@ -136,7 +134,7 @@ def _load_rotation_records(path: Path, valid_field_ids: set[str]) -> tuple[dict,
             if (not isinstance(rotation_id, str) or not rotation_id.strip()
                     or rotation_id in seen_ids or not isinstance(sequence, list)
                     or not sequence or not all(isinstance(crop, str) and crop.strip() for crop in sequence)
-                    or type(entry.get("is_current")) is not bool or not names_valid):
+                    or not valid_is_current(entry.get("is_current")) or not names_valid):
                 issues.append(f"{location}: malformed record")
                 continue
             seen_ids.add(rotation_id)

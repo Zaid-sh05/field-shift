@@ -1,7 +1,7 @@
 from ..ui_components.rotation_cards import render_cards
 from ..ui_components.timeline import render_timeline
 from ..ui_components.field_selector import field_options
-from ..ui_state import get_preferences, update_state
+from ..ui_state import get_preferences, update_state, valid_is_current
 
 
 def _format_static_measurement(key, value, t):
@@ -28,7 +28,7 @@ def _production_rotation_records(records):
         if (not isinstance(rotation_id, str) or not rotation_id.strip()
                 or not isinstance(sequence, list)
                 or not all(isinstance(crop, str) and crop.strip() for crop in sequence)
-                or type(record.get("is_current")) is not bool
+                or not valid_is_current(record.get("is_current"))
                 or any(record.get(key) is not None and not isinstance(record.get(key), str)
                        for key in ("name_ar", "name_en"))):
             continue

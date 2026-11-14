@@ -64,11 +64,16 @@ class AdapterTests(unittest.TestCase):
                 path.write_text(content, encoding="utf-8")
                 self.assertTrue(adapter.load_fields().issues)
 
-    def test_real_ids_preserved_with_contract_warnings(self):
+    def test_real_data_loads_cleanly(self):
+        # Regression: is_current=null (unknown) and zone="maru" are valid per DATA_CONTRACT.md.
+        # They used to reject all 9 real rotations and raise 15 warnings.
         original = json.loads((ROOT / "data/fields.geojson").read_text(encoding="utf-8"))
         loaded = FileDataAdapter(ROOT / "data").load_fields()
         self.assertEqual(loaded.geojson, original)
-        self.assertTrue(any("zone" in issue for issue in loaded.issues))
+        self.assertEqual(loaded.issues, ())
+        self.assertEqual({k: len(v) for k, v in loaded.rotations.items()}, {"maru_1": 3, "maru_2": 3, "maru_3": 3})
+        from src.ui_screens.comparison import _production_rotation_records
+        self.assertEqual(len(_production_rotation_records(loaded.rotations["maru_1"])), 3)
 
     def test_mock_has_no_scientific_results_or_field_ids(self):
         preview = mock_preview()
@@ -141,7 +146,8 @@ render_frontend(adapter=Adapter())
         from streamlit.testing.v1 import AppTest
         at = AppTest.from_file(str(ROOT / "app.py")).run(timeout=30)
         self.assertEqual(len(at.exception), 0)
-        self.assertEqual(len(at.dataframe), 1)
+        self.assertEqual(len(at.warning), 0)  # real data loads without contract warnings
+        self.assertEqual(len(at.selectbox), 2)  # app.py now renders the Role 6 frontend: language + field
 
 
 class DesignSystemTests(unittest.TestCase):

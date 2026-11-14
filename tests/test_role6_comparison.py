@@ -50,7 +50,10 @@ class ComparisonTests(unittest.TestCase):
     def test_production_never_falls_back_to_demo(self):
         at = comparison_app(False)
         self.assertEqual(len(at.exception), 0)
-        self.assertEqual(sum(x.value == translate("awaiting_rotation") for x in at.text), 3)
+        # The three real Role 4 rotations render (not placeholders, not demo fixtures).
+        self.assertEqual(sum(x.value == translate("awaiting_rotation") for x in at.text), 0)
+        self.assertTrue({"WW", "WL", "WF"} <= {x.value for x in at.text})
+        self.assertTrue(any(x.value == translate("not_current_rotation") for x in at.caption))
         self.assertTrue(any("530.22 m" in x.value for x in at.text))
         self.assertTrue(any("3.68°" in x.value for x in at.text))
         self.assertFalse(any(DEMO_LABEL in x.value for x in at.warning))

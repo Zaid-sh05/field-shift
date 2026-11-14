@@ -65,6 +65,9 @@ The file formats are fixed in [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md). 
 
 ```text
 app.py                 Streamlit entry point (Role 1 wires it, Role 6 owns the UI)
+src/                   Role 6 interface: screens, components, state, translations (i18n.json)
+styles/                Role 6 design system (main.css)
+tests/                 Interface tests (python -m pytest tests)
 prep/                  Offline data scripts (Roles 2, 3, 4)
   fetch_power.py       NASA POWER climate, elevation-corrected per field → data/
   gee_export.py        HLS NDVI, SMAP, IMERG, GRACE, SRTM per field → data/

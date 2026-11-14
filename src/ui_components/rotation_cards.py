@@ -39,8 +39,9 @@ def render_cards(st, t, rotations, language, *, demo=False):
             sequence = rotation.get("sequence_ar") if language == "ar" else None
             sequence = sequence or rotation.get("sequence", [])
             st.text(t("crop_sequence") + ": " + (" → ".join(sequence) or t("not_available")))
-            if not demo and rotation.get("is_current") is True:
-                st.caption(t("current_rotation"))
+            if not demo and "is_current" in rotation:
+                st.caption(t({True: "current_rotation", False: "not_current_rotation"}.get(rotation["is_current"],
+                                                                                          "current_rotation_unknown")))
             st.text(f'{t("score")}: {rotation.get("score") if rotation.get("score") is not None else t("not_available")}')
             if rotation.get("metrics"):
                 for label, value in rotation["metrics"].items():

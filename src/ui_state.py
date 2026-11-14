@@ -8,6 +8,11 @@ SCREENS = ("field", "priorities", "comparison")
 KEY = "fieldshift_ui"
 
 
+def valid_is_current(value) -> bool:
+    """DATA_CONTRACT: is_current is true, false or null (unknown until the farmer confirms)."""
+    return value is None or type(value) is bool
+
+
 def init_state(state: MutableMapping) -> dict:
     current = state.get(KEY)
     current = current if isinstance(current, dict) else {}
