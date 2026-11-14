@@ -1,6 +1,7 @@
 """Role 6 regression checks. Run: python -m unittest discover -s tests -v."""
 import importlib
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -141,6 +142,64 @@ render_frontend(adapter=Adapter())
         at = AppTest.from_file(str(ROOT / "app.py")).run(timeout=30)
         self.assertEqual(len(at.exception), 0)
         self.assertEqual(len(at.dataframe), 1)
+
+
+class DesignSystemTests(unittest.TestCase):
+    CSS = (ROOT / "styles/main.css").read_text(encoding="utf-8")
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tokens = {
+            name: value.strip()
+            for name, value in re.findall(r"(--fs-[\w-]+):\s*([^;]+)", cls.CSS)
+        }
+
+    @staticmethod
+    def _luminance(hex_color):
+        channels = [int(hex_color[index:index + 2], 16) / 255 for index in (1, 3, 5)]
+        linear = [channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4
+                  for channel in channels]
+        return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+    def _contrast(self, foreground, background):
+        first, second = sorted((self._luminance(foreground), self._luminance(background)), reverse=True)
+        return (first + 0.05) / (second + 0.05)
+
+    def test_required_theme_tokens_and_scoped_widget_styles_exist(self):
+        required = {
+            "--fs-primary", "--fs-primary-dark", "--fs-page", "--fs-surface", "--fs-text",
+            "--fs-text-muted", "--fs-border", "--fs-warning-bg", "--fs-warning-text",
+            "--fs-error-bg", "--fs-error-text", "--fs-font", "--fs-space-4", "--fs-radius-md",
+            "--fs-shadow-card", "--fs-focus",
+        }
+        self.assertTrue(required.issubset(self.tokens))
+        for marker in ("[data-testid=\"stSelectbox\"]", "[data-testid=\"stSlider\"]",
+                       "[data-testid=\"stButton\"]", "[data-testid=\"stAlert\"]", ".fs-timeline",
+                       "@media (max-width: 767px)", "@media (max-width: 420px)", "stSliderThumbValue"):
+            self.assertIn(marker, self.CSS)
+        self.assertIn("Cairo", self.CSS)
+
+    def test_latest_stylesheet_is_injected_on_rerun(self):
+        from streamlit.testing.v1 import AppTest
+        at = AppTest.from_string("from src.ui import render_frontend\nrender_frontend()").run(timeout=30)
+        expected = (ROOT / "styles/main.css").read_text(encoding="utf-8")
+        for language in ("ar", "en", "ar"):
+            at.selectbox(key="fieldshift_language_selector").set_value(language).run()
+            injected = next(m.value for m in at.markdown if 'id="role6-design-system"' in m.value)
+            self.assertIn(expected, injected)
+            self.assertIn(f'dir="{"rtl" if language == "ar" else "ltr"}"', injected)
+            self.assertEqual(len(at.exception), 0)
+
+    def test_palette_text_pairs_meet_wcag_aa_for_normal_text(self):
+        pairs = (
+            ("--fs-text", "--fs-page"), ("--fs-text-muted", "--fs-page"),
+            ("--fs-primary-dark", "--fs-page"), ("--fs-surface", "--fs-primary"),
+            ("--fs-warning-text", "--fs-warning-bg"), ("--fs-error-text", "--fs-error-bg"),
+            ("--fs-success-text", "--fs-success-bg"), ("--fs-info-text", "--fs-info-bg"),
+        )
+        for foreground, background in pairs:
+            with self.subTest(foreground=foreground, background=background):
+                self.assertGreaterEqual(self._contrast(self.tokens[foreground], self.tokens[background]), 4.5)
 
 
 if __name__ == "__main__":

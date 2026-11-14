@@ -28,7 +28,7 @@ def render(st, t, geojson, state, *, static=None):
     if selected:
         props = next(f["properties"] for f in geojson["features"] if f["properties"]["field_id"] == selected)
         measurements = (static or {}).get(selected, {})
-        with st.container(border=True):
+        with st.container(border=True, key="role6_card_field"):
             st.markdown(f'**{t("selected_farm")}**')
             for label, value in (("field_id", selected), ("field_name", options[selected]), ("zone", props.get("zone"))):
                 st.text(f'{t(label)}: {value if value is not None else t("not_available")}')

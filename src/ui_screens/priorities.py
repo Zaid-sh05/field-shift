@@ -12,7 +12,7 @@ def render(st, t, state, *, geojson=None):
         st.button(t("back_to_field"), key="priorities_back",
                   on_click=lambda: update_state(st.session_state, screen="field"))
         return
-    with st.container(border=True):
+    with st.container(border=True, key="role6_card_priorities"):
         st.text(f'{t("selected_farm")}: {options[selected]} ({selected})')
     st.caption(t("preference_notice"))
     st.caption(t("importance_scale"))

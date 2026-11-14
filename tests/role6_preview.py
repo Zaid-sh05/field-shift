@@ -11,4 +11,4 @@ import streamlit as st
 from src.ui import FileDataAdapter, render_frontend
 
 st.set_page_config(page_title="Field Shift — Role 6 Preview", page_icon="🌾", layout="wide")
-render_frontend(adapter=FileDataAdapter(ROOT / "data"))
+render_frontend(adapter=FileDataAdapter(ROOT / "data"), preview=True)

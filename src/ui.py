@@ -22,6 +22,7 @@ class FieldData:
     geojson: dict
     issues: tuple[str, ...] = ()
     static: dict = dataclass_field(default_factory=dict)
+    rotations: dict = dataclass_field(default_factory=dict)
 
 
 class DataAdapter(Protocol):
@@ -92,7 +93,60 @@ class FileDataAdapter:
                     static[fid] = values
         except (OSError, ValueError, csv.Error) as exc:
             issues.append(f"field_static.csv: {exc}")
-        return FieldData(data, tuple(issues), static)
+        rotations, rotation_issues = _load_rotation_records(self.data_dir / "rotations.json", seen)
+        issues.extend(rotation_issues)
+        return FieldData(data, tuple(issues), static, rotations)
+
+
+def _load_rotation_records(path: Path, valid_field_ids: set[str]) -> tuple[dict, list[str]]:
+    """Read only the approved Role 4 rotation fields; never trust UI/scoring extras.
+
+    The shared contract defines crop sequences, not calendars, scores, confidence,
+    or evidence. Those values stay outside the production presentation boundary
+    until their owners approve schemas and provenance requirements.
+    """
+    if not path.exists():
+        return {}, []
+    issues, rotations = [], {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return {}, [f"rotations.json: {exc}"]
+    if not isinstance(payload, dict):
+        return {}, ["rotations.json: expected field-to-rotations mapping"]
+
+    allowed = {"id", "name_ar", "name_en", "sequence", "is_current"}
+    for field_id, entries in payload.items():
+        if field_id not in valid_field_ids:
+            issues.append(f"rotations.json: unknown field ID {field_id!r}")
+            continue
+        if not isinstance(entries, list):
+            issues.append(f"{field_id}: rotations must be a list")
+            continue
+        accepted, seen_ids = [], set()
+        for index, entry in enumerate(entries):
+            location = f"{field_id} rotation[{index}]"
+            if not isinstance(entry, dict):
+                issues.append(f"{location}: malformed record")
+                continue
+            rotation_id = entry.get("id")
+            sequence = entry.get("sequence")
+            names_valid = all(entry.get(key) is None or isinstance(entry.get(key), str)
+                              for key in ("name_ar", "name_en"))
+            if (not isinstance(rotation_id, str) or not rotation_id.strip()
+                    or rotation_id in seen_ids or not isinstance(sequence, list)
+                    or not sequence or not all(isinstance(crop, str) and crop.strip() for crop in sequence)
+                    or type(entry.get("is_current")) is not bool or not names_valid):
+                issues.append(f"{location}: malformed record")
+                continue
+            seen_ids.add(rotation_id)
+            if set(entry) - allowed:
+                issues.append(f"{location}: unapproved fields ignored")
+            # Keep contract data only. In particular, unapproved scores, calendars,
+            # confidence, and evidence cannot leak into production UI cards.
+            accepted.append({key: entry[key] for key in allowed if key in entry})
+        rotations[field_id] = accepted
+    return rotations, issues
 
 
 @dataclass(frozen=True)
@@ -110,7 +164,13 @@ class ScoringRequest:
 
 class ScoringProvider(Protocol):
     def evaluate(self, request: ScoringRequest) -> Mapping:
-        """Response schema awaits Role 5; Phase 1 does not call this method."""
+        """Response schema awaits Role 5; the frontend does not call this method.
+
+        Before live wiring Role 5 must supply approved preference mapping,
+        score units/scales, confidence and provenance per metric. Role 4 must
+        supply explicit calendar start and monthly values. Internal card models
+        must be adapted from these outputs, never written into shared data files.
+        """
         ...
 
 
@@ -138,10 +198,11 @@ def render_frontend(*, adapter: DataAdapter | None = None, preview=False) -> Non
     css_path = Path(__file__).resolve().parents[1] / "styles" / "main.css"
     try:
         css = css_path.read_text(encoding="utf-8")
-    except OSError:
+    except OSError as exc:
+        st.error(f"Role 6 stylesheet could not be loaded: {css_path} ({exc})")
         css = ""
     direction = "rtl" if state["language"] == "ar" else "ltr"
-    st.markdown(f'<style>{css}</style><span class="fieldshift-direction" dir="{direction}" lang="{state["language"]}"></span>', unsafe_allow_html=True)
+    st.markdown(f'<style id="role6-design-system">{css}</style><span class="fieldshift-direction" dir="{direction}" lang="{state["language"]}"></span>', unsafe_allow_html=True)
     t = lambda key: translate(key, state["language"])
     st.selectbox(t("language"), ("ar", "en"), format_func=lambda code: {"ar": "العربية", "en": "English"}[code], key=widget_key, on_change=change_language)
     data = (adapter if adapter is not None else FileDataAdapter()).load_fields()
@@ -155,4 +216,4 @@ def render_frontend(*, adapter: DataAdapter | None = None, preview=False) -> Non
     elif state["screen"] == "priorities":
         priorities.render(st, t, state, geojson=data.geojson)
     else:
-        comparison.render(st, t, state, preview=preview)
+        comparison.render(st, t, state, preview=preview, data=data)
