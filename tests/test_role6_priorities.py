@@ -17,7 +17,7 @@ class PreferenceTests(unittest.TestCase):
         self.assertEqual(get_preferences(state)["water"], 3)
 
     def test_recover_invalid_session(self):
-        for invalid in (None, [], {"water": True, "bare": 0, "soil": 6, "risk": float("nan"), "income": "4", "effort": None}):
+        for invalid in (None, [], {"water": True, "bare": 0, "soil": 6, "risk": float("nan"), "harvest": "4", "effort": None}):
             state = {KEY: {"selected_field": "maru_2", "language": "en", "screen": "priorities", "priorities": invalid}}
             self.assertEqual(get_preferences(state), dict.fromkeys(CRITERIA, 3))
             self.assertEqual(init_state(state)["selected_field"], "maru_2")

@@ -1,6 +1,6 @@
 # Submission drafts (NASA Space Apps 2026)
 
-Drafts for the submission page. The one item marked **[TEAM]** (the slide deck link) is still open.
+Final text for the submission page. Every section is filled in; copy each one into the matching field.
 Deadline: **Sunday 15 Nov 2026, 11:59 PM**.
 
 ---
@@ -15,7 +15,9 @@ The tool supports the farmer's decision. It does not make it.
 
 ## 2. Project demo
 
-**[TEAM]** Link to the 7-slide deck (Kosay, Mohammad). Figures ready to use in `docs/figures/`:
+Seven-slide deck (PowerPoint): https://zaid-sh05.github.io/field-shift/Field_Shift_Pitch_Deck.pptx
+
+The deck is built by `prep/deck/build_deck.py`. Figures behind it, in `docs/figures/`:
 
 - `ndvi_history.png`: 11 years of NDVI for the three fields (no fallow year)
 - `temperature_check.png`: station vs NASA POWER, raw and elevation-corrected
@@ -89,7 +91,8 @@ The tool supports the farmer's decision. It does not make it.
 - One site and three fields.
 - An 18-month ground check, which is a check, not a calibration.
 - No field-level soil measurements: we show the published Maru profile as a low-confidence reference.
-- Heat and frost days are not verified against local maximum and minimum temperatures, so no score is built on them.
+- Heat and frost days are not verified against local records, so no score is built on them.
+- Daily maximum and minimum temperature feed the crop water demand (FAO-56 Penman-Monteith) and were not checked against ground data; only the mean was. This limits confidence in the water and dry-year scores, which is why they carry medium confidence.
 - Crop water demand is potential demand for a well-watered crop, and NASA rain reads low here, so the water scores are conservative.
 - The harvest count is not income: we have no local prices, costs or yields.
 - The vigour model is small (11 seasons on three fields that share one rain series) and sees rain only. It is a modest aid, not a yield forecast.

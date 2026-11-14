@@ -20,7 +20,7 @@ export function rotationCriteria(data, field, sequence, rain = 0, warming = 0) {
     risk: { score: meanOf("risk"), dry: field.dry_seasons, seasons: field.seasons },
     soil: { score: 50 * (legume + noRepeat), legume, noRepeat },
     bare: { score: (100 * greenMonths) / 12, greenMonths: round1(greenMonths) },
-    income: { score: (100 * grown.length) / sequence.length, harvests: grown.length, of: sequence.length },
+    harvest: { score: (100 * grown.length) / sequence.length, harvests: grown.length, of: sequence.length },
   };
 }
 
@@ -70,7 +70,7 @@ export function nextSeason(data, fieldId, history, weights, rain = 0, warming = 
       risk: grown ? stats[crop].risk : 100,
       soil: (100 * Object.values(rules).filter(Boolean).length) / 3,
       bare: grown ? (100 * field.green_months) / 12 : 0,
-      income: grown ? 100 : 0,
+      harvest: grown ? 100 : 0,
     };
     const total = round1(data.criteria.reduce((s, c) => s + weights[c] * criteria[c], 0) / weightSum);
     // a legume straight after the same legume builds up soil-borne disease: shown, but never ranked first

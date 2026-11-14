@@ -37,7 +37,7 @@ class ScoringTests(unittest.TestCase):
                     self.assertTrue(0 <= crit[c]["score"] <= 100, (field, c))
                     self.assertIn(crit[c]["confidence"], ("high", "medium", "low"))
             self.assertEqual([by_id[r]["soil"]["score"] for r in ("WW", "WL", "WF")], [0, 100, 50])
-            self.assertEqual([by_id[r]["income"]["score"] for r in ("WW", "WL", "WF")], [100, 100, 50])
+            self.assertEqual([by_id[r]["harvest"]["score"] for r in ("WW", "WL", "WF")], [100, 100, 50])
             self.assertAlmostEqual(by_id["WF"]["bare"]["score"], by_id["WW"]["bare"]["score"] / 2, delta=0.1)
             self.assertGreater(by_id["WF"]["risk"]["score"], by_id["WW"]["risk"]["score"])  # fallow cannot fail
 
@@ -45,13 +45,13 @@ class ScoringTests(unittest.TestCase):
         a = s.evaluate("maru_1", EQUAL)
         b = s.evaluate("maru_1", {c: 30 for c in s.CRITERIA})
         self.assertEqual([r["total"] for r in a["rotations"]], [r["total"] for r in b["rotations"]])
-        only_income = s.evaluate("maru_1", {**{c: 0 for c in s.CRITERIA}, "income": 1})
-        self.assertEqual(only_income["rotations"][-1]["id"], "WF")
-        self.assertTrue(only_income["low_confidence_top"])
-        self.assertTrue(only_income["close_call"])  # WW and WL tie on harvest count
+        only_harvest = s.evaluate("maru_1", {**{c: 0 for c in s.CRITERIA}, "harvest": 1})
+        self.assertEqual(only_harvest["rotations"][-1]["id"], "WF")
+        self.assertTrue(only_harvest["low_confidence_top"])
+        self.assertTrue(only_harvest["close_call"])  # WW and WL tie on harvest count
 
     def test_water_first_farmer_gets_a_close_call_flag(self):
-        result = s.evaluate("maru_1", {"water": 5, "risk": 5, "soil": 1, "bare": 1, "income": 1})
+        result = s.evaluate("maru_1", {"water": 5, "risk": 5, "soil": 1, "bare": 1, "harvest": 1})
         self.assertTrue(result["close_call"])
         self.assertFalse(result["low_confidence_top"])
 
@@ -67,7 +67,7 @@ class ScoringTests(unittest.TestCase):
             for c in ("water", "risk"):
                 self.assertLess(dry[rid][c]["score"], base[rid][c]["score"])
                 self.assertLess(hot[rid][c]["score"], base[rid][c]["score"])
-            for c in ("soil", "bare", "income"):  # not climate-driven in this model
+            for c in ("soil", "bare", "harvest"):  # not climate-driven in this model
                 self.assertEqual(dry[rid][c]["score"], base[rid][c]["score"])
         self.assertGreater(hot["WW"]["water"]["demand_mm"]["WHEAT"], base["WW"]["water"]["demand_mm"]["WHEAT"])
         observed = s.crop_seasons("maru_1", "WHEAT")
@@ -130,7 +130,7 @@ class ScoringTests(unittest.TestCase):
         self.assertTrue(s.predict_vigor("maru_1", 2.0)["extrapolated"])
 
     def test_drought_scenario_changes_the_next_season_advice(self):
-        water_first = {"water": 5, "risk": 5, "soil": 1, "bare": 1, "income": 1}
+        water_first = {"water": 5, "risk": 5, "soil": 1, "bare": 1, "harvest": 1}
         normal = {o["crop"]: o for o in s.next_season("maru_1", ["LENTIL", "WHEAT"], water_first)["options"]}
         drought = {o["crop"]: o for o in s.next_season("maru_1", ["LENTIL", "WHEAT"], water_first, rain_factor=0.5)["options"]}
         self.assertLess(drought["LENTIL"]["criteria"]["water"], normal["LENTIL"]["criteria"]["water"])

@@ -5,7 +5,7 @@ Criteria (0-100, higher is better), for a two-season rotation on one field:
   risk    the same share in the driest fifth of seasons only
   soil    soil-health practices present, out of 2: a legume in the rotation; no cereal directly after the same cereal
   bare    share of the year the soil is green, as HLS NDVI observed it on this field (fallow years count as bare)
-  income  share of seasons that end in a harvest (no prices or yields are assumed)
+  harvest share of seasons that end in a harvest (no prices or yields are assumed)
 
 The engine ranks by the farmer's own weights. It never recommends: the farmer and the extension officer decide.
 """
@@ -19,9 +19,9 @@ from pathlib import Path
 import pandas as pd
 
 DATA = Path(__file__).resolve().parents[1] / "data"
-CRITERIA = ("water", "risk", "soil", "bare", "income")
+CRITERIA = ("water", "risk", "soil", "bare", "harvest")
 # How far each criterion can be trusted here (see data/validation.json and docs/DATA_CONTRACT.md).
-CONFIDENCE = {"water": "medium", "risk": "medium", "soil": "low", "bare": "high", "income": "low"}
+CONFIDENCE = {"water": "medium", "risk": "medium", "soil": "low", "bare": "high", "harvest": "low"}
 LAT_RAD = math.radians(32.62)  # Maru fields
 # FAO-56 Table 11 growth-stage lengths in days (initial, development, mid, late) and Table 12 initial Kc.
 # kc_mid, kc_end, season_days and sow_month come from data/crops.csv (Role 4).
@@ -148,7 +148,7 @@ def rotation_criteria(field_id, sequence, rain_factor=1.0, warming_c=0.0, before
         "soil": {"score": 50.0 * (legume + no_repeat), "legume": legume, "no_repeat": no_repeat},
         "bare": {"score": 100 * sum(covered) / (12 * len(covered)),
                  "green_months": round(sum(covered) / len(covered), 1)},
-        "income": {"score": 100 * len(grown) / len(sequence), "harvests": len(grown), "of": len(sequence)},
+        "harvest": {"score": 100 * len(grown) / len(sequence), "harvests": len(grown), "of": len(sequence)},
     }
 
 
@@ -278,7 +278,7 @@ def next_season(field_id, history, weights, rain_factor=1.0, warming_c=0.0):
       water, risk   how often rain covered this crop's water need in the real record (fallow has no crop to fail)
       soil          rotation rules met out of 3: not the same as last season; a legume within the three-season
                     window; not a third season in a row of the same crop
-      bare, income  whether the season has a crop on the ground and a harvest
+      bare, harvest  whether the season has a crop on the ground and a harvest
     An option that repeats the same legume is listed last whatever its score (`legume_repeat`).
     `rain_factor` and `warming_c` apply the same what-if climate as evaluate().
     `outlook` gives the odds from the record (shifted by the scenario, if any). It is not a weather forecast: nobody knows the coming rain.
@@ -309,7 +309,7 @@ def next_season(field_id, history, weights, rain_factor=1.0, warming_c=0.0):
             "risk": 100 * sum(seasons[y]["met"] for y in dry_years) / len(dry_years) if grown else 100.0,
             "soil": 100 * sum(rules.values()) / len(rules),
             "bare": 100 * green / 12 if grown else 0.0,
-            "income": 100.0 if grown else 0.0,
+            "harvest": 100.0 if grown else 0.0,
         }
         total = sum(weights[c] * criteria[c] for c in CRITERIA) / sum(weights.values())
         options.append({

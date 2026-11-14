@@ -40,7 +40,7 @@ def criterion_detail(t, criterion, values):
                                        no_repeat=mark(values["no_repeat"]))
     if criterion == "bare":
         return t("detail_bare").format(months=values["green_months"])
-    return t("detail_income").format(harvests=values["harvests"], of=values["of"])
+    return t("detail_harvest").format(harvests=values["harvests"], of=values["of"])
 
 
 def render_scored_cards(st, t, rotations, result, language, *, current=None):

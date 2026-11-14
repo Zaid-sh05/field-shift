@@ -66,8 +66,8 @@ def field_block(feature):
 
 def fixtures(field_ids):
     """Reference answers from the Python engine for the JavaScript test."""
-    weight_sets = [{c: 3 for c in scoring.CRITERIA}, {"water": 5, "risk": 5, "soil": 1, "bare": 1, "income": 1},
-                   {"water": 1, "risk": 2, "soil": 5, "bare": 4, "income": 3}]
+    weight_sets = [{c: 3 for c in scoring.CRITERIA}, {"water": 5, "risk": 5, "soil": 1, "bare": 1, "harvest": 1},
+                   {"water": 1, "risk": 2, "soil": 5, "bare": 4, "harvest": 3}]
     scenarios = [(0, 0), (-40, 0), (-50, 3), (20, 1.5)]
     out = []
     for fid, weights, (rain, warming) in itertools.product(field_ids, weight_sets, scenarios):

@@ -43,10 +43,10 @@ const LOCAL = {
   },
 };
 const PRESETS = {
-  preset_balanced: { water: 3, risk: 3, soil: 3, bare: 3, income: 3 },
-  preset_water: { water: 5, risk: 5, soil: 2, bare: 1, income: 2 },
-  preset_soil: { water: 2, risk: 2, soil: 5, bare: 4, income: 2 },
-  preset_harvest: { water: 2, risk: 2, soil: 2, bare: 1, income: 5 },
+  preset_balanced: { water: 3, risk: 3, soil: 3, bare: 3, harvest: 3 },
+  preset_water: { water: 5, risk: 5, soil: 2, bare: 1, harvest: 2 },
+  preset_soil: { water: 2, risk: 2, soil: 5, bare: 4, harvest: 2 },
+  preset_harvest: { water: 2, risk: 2, soil: 2, bare: 1, harvest: 5 },
 };
 const ROTATION_COLORS = { WW: "#c8553d", WL: "#1f8a5b", WF: "#3b7cc4" };
 const CROP_CLASS = { WHEAT: "wheat", LENTIL: "lentil" };
@@ -70,7 +70,7 @@ function criterionDetail(t, criterion, v) {
   if (criterion === "risk") return t("detail_risk", { score, dry: v.dry, n: v.seasons });
   if (criterion === "soil") return t("detail_soil", { n: v.legume + v.noRepeat, legume: mark(v.legume), no_repeat: mark(v.noRepeat) });
   if (criterion === "bare") return t("detail_bare", { months: v.greenMonths });
-  return t("detail_income", { harvests: v.harvests, of: v.of });
+  return t("detail_harvest", { harvests: v.harvests, of: v.of });
 }
 
 function Hero({ t, onStart }) {

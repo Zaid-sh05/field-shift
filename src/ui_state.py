@@ -4,7 +4,7 @@ from copy import deepcopy
 from math import isfinite
 
 # Must match src/scoring.py CRITERIA (checked in tests). "effort" was dropped: no data source for it.
-CRITERIA = ("water", "risk", "soil", "bare", "income")
+CRITERIA = ("water", "risk", "soil", "bare", "harvest")
 SCREENS = ("field", "priorities", "comparison")
 KEY = "fieldshift_ui"
 

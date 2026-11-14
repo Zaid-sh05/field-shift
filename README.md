@@ -92,6 +92,7 @@ prep/                  Offline data scripts (Roles 2, 3, 4)
   validate.py          NASA vs Maru station checks → data/validation.json
   field_context.py     Season rain (IMERG) and soil (SoilGrids) per field → data/
   figures.py           Slide figures → docs/figures/
+  deck/                Pitch deck builder (python-pptx) → docs/Field_Shift_Pitch_Deck.pptx
   export_web.py        Engine results for every field and scenario → web/src/data.json
   features.py          Anomalies, season classification, NDVI monthly profile (pure pandas, self-tested)
 data/                  Generated data files + fields.geojson
