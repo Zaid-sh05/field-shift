@@ -21,7 +21,7 @@ class StateTests(unittest.TestCase):
         a, b = {}, {}
         snapshot = init_state(a)
         snapshot["priorities"]["water"] = 9
-        self.assertIsNone(init_state(a)["priorities"]["water"])
+        self.assertEqual(init_state(a)["priorities"]["water"], 3)
         update_state(a, selected_field="maru_1", language="en", screen="priorities")
         self.assertEqual(init_state(a)["selected_field"], "maru_1")
         self.assertIsNone(init_state(b)["selected_field"])
