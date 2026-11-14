@@ -1,9 +1,9 @@
-﻿import argparse
+﻿
+import argparse
 import csv
 import math
 from collections import defaultdict
 from pathlib import Path
-
 
 NASA_GRID_ELEVATION_M = 148.86
 LAPSE_RATE_C_PER_KM = 6.5
@@ -36,8 +36,11 @@ def main():
     parser = argparse.ArgumentParser(
         description="Prepare corrected NASA POWER climate data for Field Shift."
     )
-    parser.add_argument("--source-dir", required=True,
-                        help="Folder containing the professor's NASA POWER CSV files.")
+    parser.add_argument(
+        "--source-dir",
+        required=True,
+        help="Folder containing the professor's NASA POWER CSV files."
+    )
     args = parser.parse_args()
 
     source = Path(args.source_dir)
@@ -48,19 +51,34 @@ def main():
     monthly_path = source / "02_climate_monthly.csv"
 
     if not daily_path.exists() or not monthly_path.exists():
-        raise FileNotFoundError("Required daily or monthly NASA POWER CSV is missing.")
+        raise FileNotFoundError(
+            "Required daily or monthly NASA POWER CSV is missing."
+        )
 
     daily_rows = read_csv(daily_path)
     monthly_rows = read_csv(monthly_path)
 
-    # POWER Tmax runs hot at Maru (ERA5-Land: ~46 days >35 C a year vs ~82 here), so also count days
-    # above the site's own 90th percentile of Tmax. A constant correction cannot change this count.
-    all_tmax = sorted(v for v in (number(r.get("T2M_MAX")) for r in daily_rows) if v is not None)
-    tmax_p90 = all_tmax[int(0.9 * (len(all_tmax) - 1))]
+    # Historical 90th percentile of daily maximum temperature.
+    all_tmax = [
+        number(row.get("T2M_MAX"))
+        for row in daily_rows
+    ]
+    all_tmax = sorted(v for v in all_tmax if v is not None)
 
-    # Calculate daily heat and frost counts after elevation correction.
+    if not all_tmax:
+        raise ValueError("No valid daily maximum temperature values found.")
+
+    position = 0.90 * (len(all_tmax) - 1)
+    lower = int(position)
+    upper = min(lower + 1, len(all_tmax) - 1)
+    fraction = position - lower
+
+    tmax_p90 = (
+        all_tmax[lower] * (1 - fraction)
+        + all_tmax[upper] * fraction
+    )
+
     daily_counts = defaultdict(lambda: {
-        "hot_p90": 0,
         "heat_days": 0,
         "frost_days": 0,
         "valid_max": 0,
@@ -77,14 +95,14 @@ def main():
                 (elevation - NASA_GRID_ELEVATION_M)
                 * LAPSE_RATE_C_PER_KM / 1000
             )
-            key = (field_id, month)
-            counts = daily_counts[key]
+
+            counts = daily_counts[(field_id, month)]
 
             if tmax is not None:
                 counts["valid_max"] += 1
+
+                # Relative heat indicator: hottest 10% historically.
                 if tmax > tmax_p90:
-                    counts["hot_p90"] += 1
-                if tmax - correction > 35:
                     counts["heat_days"] += 1
 
             if tmin is not None:
@@ -92,7 +110,6 @@ def main():
                 if tmin - correction < 0:
                     counts["frost_days"] += 1
 
-    # Build long-format climate records.
     records = []
 
     source_variables = {
@@ -135,10 +152,12 @@ def main():
             counts = daily_counts[(field_id, month)]
 
             heat = (
-                counts["heat_days"] if counts["valid_max"] > 0 else None
+                counts["heat_days"]
+                if counts["valid_max"] > 0 else None
             )
             frost = (
-                counts["frost_days"] if counts["valid_min"] > 0 else None
+                counts["frost_days"]
+                if counts["valid_min"] > 0 else None
             )
 
             records.append({
@@ -147,21 +166,17 @@ def main():
                 "variable": "heat_days",
                 "value": heat,
             })
+
             records.append({
                 "field_id": field_id,
                 "month": month,
                 "variable": "frost_days",
                 "value": frost,
             })
-            records.append({
-                "field_id": field_id,
-                "month": month,
-                "variable": "hot_days_p90",
-                "value": counts["hot_p90"] if counts["valid_max"] > 0 else None,
-            })
 
     # Calculate z-score against the same calendar month across years.
     groups = defaultdict(list)
+
     for record in records:
         if record["value"] is not None:
             calendar_month = record["month"][5:7]
@@ -172,7 +187,7 @@ def main():
             )
             groups[key].append(record)
 
-    for key, values in groups.items():
+    for values in groups.values():
         numbers = [item["value"] for item in values]
 
         if len(numbers) < 3:
@@ -181,10 +196,11 @@ def main():
             continue
 
         mean = sum(numbers) / len(numbers)
-        variance = sum((x - mean) ** 2 for x in numbers) / (len(numbers) - 1)  # sample std, as in prep/features.py
+        variance = sum(
+            (x - mean) ** 2 for x in numbers
+        ) / (len(numbers) - 1)
         std = math.sqrt(variance)
 
-       
         for item in values:
             item["anomaly"] = (
                 (item["value"] - mean) / std if std > 0 else None
@@ -198,7 +214,9 @@ def main():
     with output_path.open("w", encoding="utf-8", newline="") as file:
         writer = csv.DictWriter(
             file,
-            fieldnames=["field_id", "month", "variable", "value", "anomaly"],
+            fieldnames=[
+                "field_id", "month", "variable", "value", "anomaly"
+            ],
         )
         writer.writeheader()
 
@@ -222,7 +240,9 @@ def main():
     print(f"Monthly source rows: {len(monthly_rows)}")
     print(f"Output rows: {len(records)}")
     print(f"Elevation correction rate: {LAPSE_RATE_C_PER_KM} C/km")
-    print(f"Hot-day threshold (site Tmax 90th percentile, raw POWER): {tmax_p90:.1f} C")
+    print(f"Historical Tmax P90 threshold: {tmax_p90:.2f} C")
+    print("Heat days now use the historical top 10% threshold.")
+    print("Confidence: LOW (exploratory relative indicator).")
 
 
 if __name__ == "__main__":
