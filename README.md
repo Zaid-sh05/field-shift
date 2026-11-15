@@ -10,7 +10,7 @@ An Arabic-first decision-support tool for rainfed farms around **Maru, Irbid (no
 
 On top of the comparison, the farmer can simulate a drier or warmer season and watch the ranking move, see how each rotation would have fared in each of the 27 real seasons on record, and ask a next-season advisor what to grow after the last three seasons' crops. A small model trained on our own NASA data estimates crop vigour for the chosen rain, with its error shown.
 
-The tool supports the farmer's judgment. It does not replace the farmer or local agricultural extension officers
+The tool supports the farmer's judgment. It does not replace the farmer or local agricultural extension officers.
 
 ## What makes it different
 
