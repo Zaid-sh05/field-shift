@@ -50,3 +50,17 @@ No score is built on either variable.
 The engine uses monthly weather summaries in the daily FAO-56 Penman–Monteith calculation, assumes zero daily soil heat flux, and spreads monthly rainfall evenly over that month's days. It estimates actual vapour pressure from mean relative humidity and sums daily `Kc × ET0` over the crop calendar. The crop coverage score is seasonal rain divided by estimated demand, capped at 100%. This is a potential water demand estimate. The model does not track effective rainfall, runoff or soil water storage.
 
 The rotation score averages the phase scores equally. Fallow contributes 100% by convention because it has zero crop water demand. In Maru 1 in 2024–25, wheat received 158.35 mm against an estimated 700.77 mm of demand, for a crop score of 22.6%. The wheat–fallow rotation score is `(22.6 + 100) / 2`, or 61.3% before rounding to the displayed integer.
+
+## Crop calendar check
+
+`crops.csv` sows wheat and lentil on 1 November (`sow_month`) with FAO-56 season lengths: wheat 240 days (ends late June), lentil 170 days. Maru trials sowed both on 14 December 2021 (Bani Khalaf et al. 2024, 2025); lentil was harvested 2 June 2022 (170 days, the same length). No wheat harvest date from that trial season is published.
+
+Sensitivity run with 14 December sowing, all three fields:
+
+| calendar | equal priorities, first | water-first, first | largest score change |
+|---|---|---|---|
+| 1 November, FAO-56 lengths (used) | wheat–lentil | wheat–lentil | – |
+| 14 December, wheat 240 days (runs to August) | wheat–lentil | wheat–fallow | 9.3 points |
+| 14 December, wheat to 7 June (175 days) | wheat–lentil | wheat–fallow | 5.3 points |
+
+The November calendar is kept: a 240-day wheat season from 14 December would run into August, past any Maru harvest, and the 7 June harvest date comes from a different season (2026).

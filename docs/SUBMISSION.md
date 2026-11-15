@@ -95,6 +95,7 @@ The deck is built by `prep/deck/build_deck.py`. Figures behind it, in `docs/figu
 - Daily maximum and minimum temperature feed the crop water demand (FAO-56 Penman-Monteith) and were not checked against ground data; only the mean was. This limits confidence in the water and dry-year scores, which is why they carry medium confidence.
 - Crop water demand is potential demand for a well-watered crop, and NASA rain reads low here, so the water scores are conservative.
 - The harvest count is not income: we have no local prices, costs or yields.
+- *Crop calendar.* The engine sows wheat and lentil on 1 November with FAO-56 season lengths (wheat 240 days, ending in late June, close to Maru’s June harvest; lentil 170 days). Published Maru trials sowed both crops on 14 December 2021 (Bani Khalaf et al. 2024, 2025), and lentil was harvested on 2 June 2022. We re-ran the engine with 14 December sowing on all three fields. With equal or soil-first priorities, wheat–lentil stays first. With water-first priorities, wheat–fallow moves to first, and scores shift by up to 9 points. We kept the November calendar because no wheat harvest date from the same trial season is published; a 240-day season from 14 December would run into August, past any Maru harvest.
 - The vigour model is small (11 seasons on three fields that share one rain series) and sees rain only. It is a modest aid, not a yield forecast.
 - Scenarios shift the observed record; they are not climate projections. They change the water and dry-year scores only.
 - NDVI cannot tell wheat from lentil, so the satellite history rules out wheat–fallow as the current rotation but cannot choose between the other two.
@@ -146,6 +147,9 @@ The deck is built by `prep/deck/build_deck.py`. Figures behind it, in `docs/figu
 - Maru rotation trials (wheat–wheat, wheat–lentil, wheat–fallow), IAEA TECDOC-1468. https://www-pub.iaea.org/MTCD/Publications/PDF/te_1468_web.pdf
 - FAO Irrigation and Drainage Paper 56: Penman-Monteith reference evapotranspiration, crop coefficients (Table 12) and growth-stage lengths (Table 11). https://www.fao.org/4/x0490e/x0490e00.htm
 - FAO crop water needs. https://www.fao.org/4/s2022e/s2022e02.htm
+- Bani Khalaf, Y. et al. (2025). Seed priming with polyethylene glycol improved drought tolerance of late sown wheat. Agronomy Research 23(S2), 805–821, p. 808 (Maru sowing dates). https://doi.org/10.15159/AR.25.069
+- Bani Khalaf, Y. et al. (2024). Foliar boron application and row spacing effects on lentil. Journal of Ecological Engineering 25(10), 307–317, p. 309 (Maru sowing and harvest dates). https://doi.org/10.12911/22998993/192270
+- Jordan News Agency (Petra), 7 June 2026: wheat harvest begins at NARC’s Maru station. https://petra.gov.jo/sm_forum/index.php/en/news/promising-wheat-harvest-begins-in-smps-maru-station-in-irbid-narc
 - FAO crop rotation guidance. https://www.fao.org/4/Y5146E/y5146e0a.htm
 
 **Challenge**

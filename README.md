@@ -41,6 +41,8 @@ What the data showed:
 - **Both satellite rainfall products under-count.** NASA POWER and GPM IMERG show 23% and 22% less rain than the station over the same months, so rainfall is shown with medium confidence.
 - **2024–25 was the driest season on record, and the satellites saw the crop suffer.** NASA POWER puts it 55% below the mean of the other 26 seasons, GPM IMERG 56% below, and the HLS greenness peak averaged over the three fields fell from 0.82 to 0.48.
 
+- **The ranking depends on the calendar for water-first farmers.** Re-running with Maru’s published 14 December sowing date keeps wheat–lentil first for balanced priorities, but moves wheat–fallow to first when water matters most. Details in [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md).
+
 Numbers are in [`data/validation.json`](data/validation.json), produced by [`prep/validate.py`](prep/validate.py).
 
 ## NASA and partner data used
