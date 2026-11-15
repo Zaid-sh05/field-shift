@@ -10,11 +10,11 @@
 
 | Path | Owner |
 |---|---|
-| `app.py`, `requirements*.txt`, deployment config | Role 1 |
+| `app.py`, `web/`, `docs/app/`, `prep/export_web.py`, `requirements*.txt`, deployment config | Role 1 |
 | `prep/fetch_power.py`, `data/climate_monthly.csv` | Role 2 |
 | `prep/gee_export.py`, `prep/features.py`, `data/sat_monthly.csv`, `data/field_history.csv`, `data/field_static.csv` | Role 3 |
 | `data/fields.geojson`, `data/crops.csv`, `data/soil.json`, `data/rotations.json` | Role 4 |
-| `src/scoring.py`, `data/explanations.json` | Role 5 |
+| `src/scoring.py` (review), `tests/test_scoring.py` | Role 5 |
 | `src/ui.py`, `i18n.json`, styles | Role 6 |
 
 If you need to edit a file you do not own, ask its owner first.

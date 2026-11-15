@@ -1,4 +1,4 @@
-# Submission drafts (NASA Space Apps 2026)
+# Submission text (NASA Space Apps 2026)
 
 Final text for the submission page. Every section is filled in; copy each one into the matching field.
 Deadline: **Sunday 15 Nov 2026, 11:59 PM**.

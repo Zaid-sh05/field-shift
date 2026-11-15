@@ -40,7 +40,6 @@ What the data showed:
 - **NASA temperature runs hot here, and we know why.** The NASA POWER grid cell sits at 149 m; the Maru station is at 589 m. Against 18 months of published station data, the mean-temperature error is 2.37 °C raw and 0.56–0.96 °C after a standard lapse-rate correction (5–7 °C/km). The result holds across the whole range, so it does not depend on one tuned number.
 - **Both satellite rainfall products under-count.** NASA POWER and GPM IMERG show 23% and 22% less rain than the station over the same months, so rainfall is shown with medium confidence.
 - **2024–25 was the driest season on record, and the satellites saw the crop suffer.** NASA POWER puts it 55% below the mean of the other 26 seasons, GPM IMERG 56% below, and the HLS greenness peak averaged over the three fields fell from 0.82 to 0.48.
-
 - **The crop calendar is local and measured from space.** Sowing follows Maru trials (14 December). The wheat season end, 5 June, is the median of 32 satellite field-seasons, two days from NARC’s announced Maru harvest date. With balanced priorities wheat–lentil comes first; when water is all that matters, resting the land (wheat–fallow) leads. Details in [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md).
 
 Numbers are in [`data/validation.json`](data/validation.json), produced by [`prep/validate.py`](prep/validate.py).
@@ -54,8 +53,9 @@ Numbers are in [`data/validation.json`](data/validation.json), produced by [`pre
 | SMAP L4 | Root-zone soil moisture | 9 km | Extracted per field as regional context; not used in the scores |
 | GPM IMERG | Precipitation | ~0.1° | Season rain per field; independent rainfall check against POWER and the Maru station |
 | GRACE / GRACE-FO | Terrestrial water storage | ~3° mascons | Extracted as regional context; not used in the scores |
-| SRTM | Elevation and slope | 30 m | Per-field elevation for the temperature correction; erosion risk |
-| FAO-56, FAO rotation guidance, IAEA Maru trials | Crop coefficients and growth stages, rotation evidence | – | Crop table and the soil-health rule |
+| SRTM | Elevation and slope | 30 m | Per-field elevation for the temperature correction; slope shown per field |
+| FAO-56, FAO rotation guidance, IAEA Maru trials | Crop coefficients and growth-stage shares, rotation evidence | – | Crop table and the crop rotation practices score |
+| Maru field trials (Bani Khalaf et al. 2024, 2025) | Sowing and harvest dates | point | Local crop calendar, with the wheat season end measured from HLS |
 | SoilGrids (ISRIC) | Clay, sand, organic carbon, pH | 250 m | Soil per field, shown as modelled |
 | ERA5-Land (ECMWF) | Daily maximum temperature | ~9 km | Cross-check only: it showed POWER heat days are overstated |
 | Maru station (NARC, JUST) | Published monthly temperature and rain, soil | point | Ground truth for checking NASA data |
@@ -65,31 +65,31 @@ Every score in the interface names its source and carries a confidence level: hi
 ## How it works
 
 ```text
-prep/ (runs before the demo)          data/ (files, the contract)        app.py (live demo)
+prep/ (runs before the demo)          data/ (files, the contract)        live demo
 ──────────────────────────           ──────────────────────────         ─────────────────────
 fetch_power.py   ── NASA POWER ──►   climate_monthly.csv      ─┐
-gee_export.py    ── HLS, SMAP, ──►   sat_monthly.csv           ├──►  src/scoring.py ──► Streamlit UI (Arabic / English)
-                    IMERG, GRACE,    field_history.csv         │     scores + confidence
-                    SRTM             ndvi_monthly_profile.csv  │
-validate.py      ── station data ─►  validation.json          ─┤
-crop table (FAO, ICARDA) ─────────►  crops.csv, soil.json,    ─┘
+gee_export.py    ── HLS, SMAP, ──►   sat_monthly.csv           ├──►  src/scoring.py
+                    IMERG, GRACE,    field_history.csv         │      │
+                    SRTM             ndvi_monthly_profile.csv  │      ├─► export_web.py ─► React site (docs/app, GitHub Pages)
+validate.py      ── station data ─►  validation.json          ─┤      └─► app.py ─► Streamlit version (backup)
+crop table (FAO-56, Maru trials) ─►  crops.csv, soil.json,    ─┘
                                      rotations.json
 ```
 
-The live app never calls Earth Engine or a remote API. It reads files only, so it keeps working on bad venue Wi-Fi.
+The live app never calls Earth Engine or a remote API. The React site ships with every result precomputed by the Python engine for each field and 56 climate scenarios, so it needs no server and keeps working on bad venue Wi-Fi. A test checks the site's JavaScript against the Python engine.
 
 The file formats are fixed in [`docs/DATA_CONTRACT.md`](docs/DATA_CONTRACT.md). Change them only through the integration lead.
 
 ## Repository layout
 
 ```text
-app.py                 Streamlit entry point (Role 1 wires it, Role 6 owns the UI)
-web/                   React site (Vite). Reads web/src/data.json; `npm test` checks its engine against Python
+web/                   React site (Vite), the live app. Reads web/src/data.json; `npm test` checks its engine against Python
 docs/app/              The built site, served by GitHub Pages
+app.py                 Streamlit version (backup), same engine
 src/scoring.py         Rotation scoring: five criteria, the farmer's weights, honesty flags
-src/                   Role 6 interface: screens, components, state, translations (i18n.json)
+src/                   Streamlit interface: screens, components, state; translations in i18n.json (shared with the React site)
 styles/                Role 6 design system (main.css)
-tests/                 Interface tests (python -m pytest tests)
+tests/                 Engine and interface tests (python -m pytest tests)
 prep/                  Offline data scripts (Roles 2, 3, 4)
   fetch_power.py       NASA POWER climate, elevation-corrected per field → data/
   gee_export.py        HLS NDVI, SMAP, IMERG, GRACE, SRTM per field → data/
@@ -112,9 +112,17 @@ requirements-prep.txt  Extra packages for the prep scripts (Earth Engine etc.)
 git clone https://github.com/Zaid-sh05/field-shift.git
 cd field-shift
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+cd web && npm install && npm run dev      # the live React site, at the address Vite prints
+```
+
+The Streamlit version (backup) runs from the repository root:
+
+```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
+
+Checks: `python -m pytest -q tests` (55 tests) and `cd web && npm test` (5 tests).
 
 To rebuild the React site after a data or engine change:
 
@@ -139,12 +147,12 @@ python prep/features.py        # self-check: prints "ok"
 
 | Role | Owner | Owns |
 |---|---|---|
-| 1. Integration and deployment | Zaid | Repo, `app.py` wiring, deployment, submission page |
-| 2. Climate data | Sadeel | NASA POWER, IMERG, frost/heat/ET0 indicators |
+| 1. Integration and deployment | Zaid | Repo, scoring engine, React site, deployment, submission page |
+| 2. Climate data | Sadeel | NASA POWER climate, daily rain in the water score, heat and frost indicators, data review |
 | 3. Satellite data | Dr. Hossam | HLS NDVI, SMAP, IMERG, GRACE, SRTM, season classification, validation |
-| 4. Agronomy and story | Kosay | Crop table, soil, field choice, rotations, video |
-| 5. Scoring and AI | Lana | Multi-criteria scoring, confidence, LLM explanations |
-| 6. Interface | Mohammad | Streamlit UI, Arabic RTL, cards and timeline |
+| 4. Agronomy and story | Kosay | Crop table, rotations, Maru crop calendar sources, FAO-56 checks, video |
+| 5. Scoring review | Lana | Scoring criteria and confidence, engine review |
+| 6. Interface | Mohammad | Streamlit interface, Arabic RTL, next-season advisor fixes |
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for how we work.
 
@@ -155,6 +163,7 @@ In line with the Space Apps rules, we disclose AI use:
 - The app uses no generative AI. Scores and advice come from a transparent, rule-based engine, and the sentences on screen are fixed templates filled with its numbers. Nothing in the app recommends a rotation.
 - One small statistical model is trained on our own data: a least-squares line from season rain to the satellite greenness peak, fitted on 33 field-seasons and validated on held-out seasons (error 0.12 NDVI against 0.15 for guessing the mean).
 - AI assistants (Claude, ChatGPT) helped with research, with data analysis and with documentation. The team reviewed and ran everything.
+- The demo video is AI-generated: every scene is illustrative, not filmed at Maru, and it says so on screen.
 
 The final submission page lists the exact tools.
 
