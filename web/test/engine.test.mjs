@@ -34,6 +34,17 @@ test("next-season advice matches Python for every history", () => {
   }
 });
 
+test("an unknown season preserves the place of older history", () => {
+  const weights = Object.fromEntries(data.criteria.map((c) => [c, 3]));
+  for (const oldest of ["WHEAT", "LENTIL"]) {
+    const result = nextSeason(data, "maru_1", [oldest, null, "WHEAT"], weights);
+    assert.deepEqual(result, nextSeason(data, "maru_1", ["WHEAT"], weights));
+  }
+  const result = nextSeason(data, "maru_1", ["WHEAT", null, "LENTIL"], weights);
+  assert.equal(result.options.at(-1).crop, "LENTIL");
+  assert.equal(result.options.at(-1).legumeRepeat, true);
+});
+
 test("vigour estimate falls with rain and flags extrapolation", () => {
   const normal = predictVigor(data, "maru_1", 0);
   const drought = predictVigor(data, "maru_1", -50);

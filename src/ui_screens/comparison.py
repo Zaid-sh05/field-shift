@@ -87,7 +87,7 @@ def _render_replay(st, t, field_id, rotations, language):
                    for rid in names}, height=260, y_label=t("replay_axis"))
     worst = min(replay, key=lambda year: min(replay[year].values()))
     st.caption(t("replay_note").format(n=len(replay), season=f"{worst - 1}–{str(worst)[2:]}", values=" · ".join(
-        f"{names[rid]} {replay[worst][rid]}%" for rid in names)))
+        f"{names[rid]} {replay[worst][rid]}%" for rid in names)) + " " + t("fallow_water_note"))
 
 
 def _season(year):
@@ -120,12 +120,15 @@ def _render_advisor(st, t, field_id, preferences, rain_factor=1.0, warming_c=0.0
         if picks[-1] is None:
             st.info(t("advisor_prompt"))
             return
-        history = [c for c in picks if c]
-        result = scoring.next_season(field_id, history, preferences, rain_factor, warming_c)
+        result = scoring.next_season(field_id, picks, preferences, rain_factor, warming_c)
+        if picks[-2] is None:
+            st.caption(t("advisor_history_gap"))
         if rain_factor != 1 or warming_c:
             st.warning(t("adv_scenario").format(rain=round(100 * (rain_factor - 1)), warming=warming_c))
         moisture, last = result["soil_moisture"], result["last_season"]
-        st.text(t("adv_history").format(history=" ← ".join(crop(c) for c in history)))
+        first_known = next(index for index, choice in enumerate(picks) if choice is not None)
+        history = " ← ".join(crop(c) if c is not None else t("current_unsure") for c in picks[first_known:])
+        st.text(t("adv_history").format(history=history))
         st.caption(t("adv_last_driest" if last["driest"] else "adv_last_rain").format(
             season=_season(last["year"]), rain=last["rain_mm"]) + " " + t(f"adv_moisture_{moisture['state']}").format(
             month=moisture["month"]) + " " + badge(t, "medium"))

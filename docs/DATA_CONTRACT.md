@@ -12,7 +12,7 @@ All roles write to and read from `data/`. These names and columns are fixed. If 
 | `ndvi_monthly_profile.csv` | Role 3 | `field_id, cal_month (1-12), ndvi_median, bare_share, n_years` — typical NDVI per calendar month 2015–2025; `bare_share` = share of years with NDVI < 0.25 (bare soil) |
 | `validation.json` | Role 3 | NASA vs local station checks: temperature (raw, lapse-corrected, sensitivity 5–7 °C/km) and rainfall (POWER, IMERG) |
 | `crops.csv` | Role 4 | `crop, family, legume, kc_mid, kc_end, season_days, sow_month, min_rain_mm, frost_sens, heat_c, income_level, source_url` |
-| `soil.json` | Role 4 (values from Role 3) | `{field_id: {clay_pct, sand_pct, soc_gkg, ph, source}}`: SoilGrids 250 m topsoil (0–30 cm), modelled. Clay, sand and pH agree with the Maru station profile; organic carbon reads about 2× the station value, so show it with low confidence. `prep/field_context.py` |
+| `soil.json` | Role 4 (values from Role 3) | `{field_id: {clay_pct, sand_pct, soc_gkg, ph, source}}`: modelled SoilGrids topsoil (0–30 cm) at 250 m. The field description shows clay, sand and pH. The station profile is an approximate local reference. The rotation practices score uses crop sequences. `prep/field_context.py` |
 | `soil_reference.json` | Role 4 | Published Maru research-site soil profile (NARC/JUST 2021). Reference only, **not** field measurements; use with low confidence |
 | `rotations.json` | Role 4 | `{field_id: [{id, name_ar, name_en, sequence: [crop, ...], is_current}]}`; `is_current` is `true`, `false` or `null` (null = unknown. Satellite history rules out wheat–fallow (`false`: no fallow season since 2015); wheat–wheat vs wheat–lentil stays `null` because NDVI cannot tell wheat from lentil, so the farmer confirms) |
 | (scores) | Role 5 | Not a file: `src/scoring.py` computes scores live from the files above, so they always match the farmer's sliders |
@@ -42,3 +42,11 @@ All roles write to and read from `data/`. These names and columns are fixed. If 
 | `frost_days` | days with elevation-corrected POWER Tmin < 0 °C | low: not checked against local Tmin |
 
 No score is built on either variable.
+
+## Water coverage calculation
+
+`wind_m_s` is NASA POWER `WS2M` in m/s at 2 m. `solar_mj_m2_day` is `ALLSKY_SFC_SW_DWN` from the Agroclimatology community in MJ/m²/day. `precip_mm` is monthly `PRECTOTCORR` summed in mm.
+
+The engine uses monthly weather summaries in the daily FAO-56 Penman–Monteith calculation, assumes zero daily soil heat flux, and spreads monthly rainfall evenly over that month's days. It estimates actual vapour pressure from mean relative humidity and sums daily `Kc × ET0` over the crop calendar. The crop coverage score is seasonal rain divided by estimated demand, capped at 100%. This is a potential water demand estimate. The model does not track effective rainfall, runoff or soil water storage.
+
+The rotation score averages the phase scores equally. Fallow contributes 100% by convention because it has zero crop water demand. In Maru 1 in 2024–25, wheat received 158.35 mm against an estimated 700.77 mm of demand, for a crop score of 22.6%. The wheat–fallow rotation score is `(22.6 + 100) / 2`, or 61.3% before rounding to the displayed integer.

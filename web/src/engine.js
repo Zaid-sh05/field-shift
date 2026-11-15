@@ -62,7 +62,7 @@ export function nextSeason(data, fieldId, history, weights, rain = 0, warming = 
     const window = [...history.slice(-2), crop];
     const rules = {
       varied: crop !== last,
-      legume: window.some((c) => data.crops[c].legume),
+      legume: window.some((c) => data.crops[c]?.legume),
       no_third: !(grown && history.length >= 2 && last === crop && history[history.length - 2] === crop),
     };
     const criteria = {
