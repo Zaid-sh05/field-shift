@@ -163,9 +163,3 @@ The final submission page lists the exact tools.
 [MIT](LICENSE)
 
 ---
-
-### للفريق بالعربي
-
-- **كل واحد بيشتغل بملفاته بس**، على branch باسمه، وبيفتح Pull Request. الدمج على `main` بيعمله الدور 1 بس.
-- **شكل الملفات ثابت** ومكتوب بـ `docs/DATA_CONTRACT.md`. إذا بدك تغيّر عمود، احكي مع الدور 1 أول.
-- **ممنوع ترفع أي مفتاح API** للـ repo. المفاتيح بتنحط بـ `.streamlit/secrets.toml`، وهاد الملف مستثنى من git.
