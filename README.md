@@ -154,7 +154,7 @@ In line with the Space Apps rules, we disclose AI use:
 
 - The app uses no generative AI. Scores and advice come from a transparent, rule-based engine, and the sentences on screen are fixed templates filled with its numbers. Nothing in the app recommends a rotation.
 - One small statistical model is trained on our own data: a least-squares line from season rain to the satellite greenness peak, fitted on 33 field-seasons and validated on held-out seasons (error 0.12 NDVI against 0.15 for guessing the mean).
-- AI assistants (Claude, ChatGPT) helped with research, with writing and reviewing code, with data analysis and with documentation. The team reviewed and ran everything.
+- AI assistants (Claude, ChatGPT) helped with research, with data analysis and with documentation. The team reviewed and ran everything.
 
 The final submission page lists the exact tools.
 
