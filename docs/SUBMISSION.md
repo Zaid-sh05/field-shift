@@ -75,6 +75,8 @@ The deck is built by `prep/deck/build_deck.py`. Figures behind it, in `docs/figu
    - *Soil cover:* months a year the field is green, as HLS observed it on that field. A fallow year counts as bare.
    - *Harvests:* the share of seasons that end in a harvest. We assume no prices or yields.
 
+   Crop calendar: sown 14 December as in Maru trials; wheat ends 5 June, measured from 11 years of satellite greenness and two days from NARC’s announced Maru harvest; lentil ends 2 June as in the Maru trial.
+
    The farmer's sliders are the weights. The app flags a close call when the top two are within 5 points or when a 10% change in one weight flips the order, and it warns when the farmer's top priority rests on low-confidence data. It ranks; it never recommends.
 7. *Interface.* A React single-page site, Arabic right-to-left with an English switch, built for phones first. It ships with every result precomputed by the Python engine, so it needs no server and keeps working on weak internet; a test checks the site's JavaScript against the Python engine on 36 reference cases.
 
@@ -95,7 +97,7 @@ The deck is built by `prep/deck/build_deck.py`. Figures behind it, in `docs/figu
 - Daily maximum and minimum temperature feed the crop water demand (FAO-56 Penman-Monteith) and were not checked against ground data; only the mean was. This limits confidence in the water and dry-year scores, which is why they carry medium confidence.
 - Crop water demand is potential demand for a well-watered crop, and NASA rain reads low here, so the water scores are conservative.
 - The harvest count is not income: we have no local prices, costs or yields.
-- *Crop calendar.* The engine sows wheat and lentil on 1 November with FAO-56 season lengths (wheat 240 days, ending in late June, close to Maru’s June harvest; lentil 170 days). Published Maru trials sowed both crops on 14 December 2021 (Bani Khalaf et al. 2024, 2025), and lentil was harvested on 2 June 2022. We re-ran the engine with 14 December sowing on all three fields. With equal or soil-first priorities, wheat–lentil stays first. With water-first priorities, wheat–fallow moves to first, and scores shift by up to 9 points. We kept the November calendar because no wheat harvest date from the same trial season is published; a 240-day season from 14 December would run into August, past any Maru harvest.
+- *Crop calendar.* Sowing is 14 December, the date used in published Maru trials (Bani Khalaf et al. 2024, 2025). Lentil grows 170 days, to 2 June, as in that trial. No wheat harvest date from the trial season is published, so we measured the season end from space: across 32 HLS field-seasons the crop dries down to bare-soil greenness on 5 June (median; half the seasons fall between 15 May and 14 June). NARC announced the start of the Maru wheat harvest on 7 June 2026, two days from our estimate. FAO-56 growth-stage shares are stretched to these local lengths, as FAO-56 advises. The calendar is a typical season, not a forecast, and the rule is the same for all three fields.
 - The vigour model is small (11 seasons on three fields that share one rain series) and sees rain only. It is a modest aid, not a yield forecast.
 - Scenarios shift the observed record; they are not climate projections. They change the water and dry-year scores only.
 - NDVI cannot tell wheat from lentil, so the satellite history rules out wheat–fallow as the current rotation but cannot choose between the other two.
@@ -119,7 +121,7 @@ The deck is built by `prep/deck/build_deck.py`. Figures behind it, in `docs/figu
 - **Claude (Anthropic)** helped with research and preparation, with writing and reviewing data-processing code, with analysis (the elevation check, validation and figures), and with drafting documentation. The team reviewed and ran all code.
 - **ChatGPT / Codex (OpenAI)** helped a teammate assemble the Maru data package from published sources.
 - **The app runs no generative AI.** Scores and advice come from a transparent rule-based engine, and the sentences on screen are fixed templates filled with its numbers. Nothing in the app recommends a rotation.
-- **One small statistical model is trained on our own data:** a least-squares line that predicts the winter greenness peak (HLS NDVI) from season rain (NASA POWER), fitted on 33 field-seasons. Correlation 0.53. On seasons held out of training its error is 0.12 NDVI, against 0.15 for always guessing the mean. The app shows that error next to every estimate.
+- **One small statistical model is trained on our own data:** a least-squares line that predicts the winter greenness peak (HLS NDVI) from season rain (NASA POWER), fitted on 33 field-seasons. Correlation 0.45. On seasons held out of training its error is 0.12 NDVI, against 0.15 for always guessing the mean. The app shows that error next to every estimate.
 - The 30-second video uses AI-generated illustrative footage (Google Flow), labelled as such on screen.
 - No AI-generated data is presented as measurement. Every number traces to a NASA dataset or a cited publication.
 

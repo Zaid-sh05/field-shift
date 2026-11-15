@@ -23,6 +23,8 @@ CRITERIA = ("water", "risk", "soil", "bare", "harvest")
 CONFIDENCE = {"water": "medium", "risk": "medium", "soil": "low", "bare": "high", "harvest": "low"}
 LAT_RAD = math.radians(32.62)  # Maru fields
 # FAO-56 Table 11 growth-stage lengths in days (initial, development, mid, late) and Table 12 initial Kc.
+# The stage shares are kept and stretched to the local season length in data/crops.csv, as FAO-56 advises when a
+# local calendar is known (wheat: Maru sowing date + satellite-observed season end; lentil: Maru trial dates).
 # kc_mid, kc_end, season_days and sow_month come from data/crops.csv (Role 4).
 STAGES = {"WHEAT": (30, 140, 40, 30), "LENTIL": (25, 35, 70, 40)}
 KC_INI = {"WHEAT": 0.7, "LENTIL": 0.4}
@@ -57,9 +59,14 @@ def et0_penman_monteith(tmean, tmax, tmin, rh_pct, wind_m_s, solar_mj, doy, elev
         slope + gamma * (1 + 0.34 * wind_m_s))
 
 
-def kc_on_day(crop, day, kc_mid, kc_end):
-    """Crop coefficient on day `day` after sowing (FAO-56 single-Kc curve)."""
-    ini, dev, mid, late = STAGES[crop]
+def kc_on_day(crop, day, kc_mid, kc_end, season_days=None):
+    """Crop coefficient on day `day` after sowing (FAO-56 single-Kc curve).
+
+    With `season_days`, the four FAO-56 stages keep their shares and are scaled to that season length.
+    """
+    stages = STAGES[crop]
+    scale = season_days / sum(stages) if season_days else 1.0
+    ini, dev, mid, late = (length * scale for length in stages)
     k0 = KC_INI[crop]
     if day < ini:
         return k0
@@ -109,7 +116,7 @@ def crop_seasons(field_id, crop, rain_factor=1.0, warming_c=0.0):
     months = wide.loc[field_id]
     out = {}
     for year in sorted({int(m[:4]) for m in months.index})[1:]:
-        day0 = date(year - 1, int(row.sow_month), 1)
+        day0 = date(year - 1, int(row.sow_month), int(row.sow_day))
         demand = rain = 0.0
         for d in range(int(row.season_days)):
             day = day0 + timedelta(days=d)
@@ -117,7 +124,7 @@ def crop_seasons(field_id, crop, rain_factor=1.0, warming_c=0.0):
             if key not in months.index:
                 break
             m = months.loc[key]
-            demand += kc_on_day(crop, d, row.kc_mid, row.kc_end) * et0_penman_monteith(
+            demand += kc_on_day(crop, d, row.kc_mid, row.kc_end, int(row.season_days)) * et0_penman_monteith(
                 m.tmean_c + warming_c, m.tmax_c + warming_c, m.tmin_c + warming_c, m.rh_pct, m.wind_m_s,
                 m.solar_mj_m2_day, day.timetuple().tm_yday, elevation[field_id])
             rain += rain_factor * float(daily_rain.loc[day.isoformat()])
@@ -354,8 +361,8 @@ def crop_calendar(sequence, start_month=10):
         slots = [None] * 12
         if _is_crop(crop):
             row = crops.loc[crop]
-            n_months = math.ceil(int(row.season_days) / 30.4)
-            for i in range(n_months):
-                slots[(int(row.sow_month) + i - start_month) % 12] = crop
+            sown = date(2001, int(row.sow_month), int(row.sow_day))
+            for d in range(int(row.season_days) + 1):  # every month the crop is in the ground, even partly
+                slots[((sown + timedelta(days=d)).month - start_month) % 12] = crop
         seasons.append(slots)
     return seasons

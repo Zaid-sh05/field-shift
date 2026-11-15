@@ -47,20 +47,19 @@ No score is built on either variable.
 
 `wind_m_s` is NASA POWER `WS2M` in m/s at 2 m. `solar_mj_m2_day` is `ALLSKY_SFC_SW_DWN` from the Agroclimatology community in MJ/m²/day. `precip_mm` is monthly `PRECTOTCORR` summed in mm.
 
-The engine uses monthly weather summaries in the daily FAO-56 Penman–Monteith calculation, assumes zero daily soil heat flux, and spreads monthly rainfall evenly over that month's days. It estimates actual vapour pressure from mean relative humidity and sums daily `Kc × ET0` over the crop calendar. The crop coverage score is seasonal rain divided by estimated demand, capped at 100%. This is a potential water demand estimate. The model does not track effective rainfall, runoff or soil water storage.
+The engine uses monthly weather summaries in the daily FAO-56 Penman–Monteith calculation, assumes zero daily soil heat flux, and sums the daily NASA POWER `PRECTOTCORR` rain over the crop's days. It estimates actual vapour pressure from mean relative humidity and sums daily `Kc × ET0` over the crop calendar. The crop coverage score is seasonal rain divided by estimated demand, capped at 100%. This is a potential water demand estimate. The model does not track effective rainfall, runoff or soil water storage.
 
-The rotation score averages the phase scores equally. Fallow contributes 100% by convention because it has zero crop water demand. In Maru 1 in 2024–25, wheat received 158.35 mm against an estimated 700.77 mm of demand, for a crop score of 22.6%. The wheat–fallow rotation score is `(22.6 + 100) / 2`, or 61.3% before rounding to the displayed integer.
+The rotation score averages the phase scores equally. Fallow contributes 100% by convention because it has zero crop water demand. In Maru 1 in 2024–25, wheat received 145.05 mm against an estimated 489.08 mm of demand, for a crop score of 29.7%. The wheat–fallow rotation score is `(29.7 + 100) / 2`, or 64.8% before rounding to the displayed integer.
 
-## Crop calendar check
+## Crop calendar
 
-`crops.csv` sows wheat and lentil on 1 November (`sow_month`) with FAO-56 season lengths: wheat 240 days (ends late June), lentil 170 days. Maru trials sowed both on 14 December 2021 (Bani Khalaf et al. 2024, 2025); lentil was harvested 2 June 2022 (170 days, the same length). No wheat harvest date from that trial season is published.
+| crop | sown | season | ends | source |
+|---|---|---|---|---|
+| wheat | 14 Dec | 173 days | 5 Jun | sowing: Maru trial (Bani Khalaf et al. 2025, p. 808); end: median satellite season end below |
+| lentil | 14 Dec | 170 days | 2 Jun | Maru trial (Bani Khalaf et al. 2024, p. 309) |
 
-Sensitivity run with 14 December sowing, all three fields:
+**Satellite-measured season end.** For every clear crop season (peak NDVI ≥ 0.40) on each field, 2015–2025, the end is the date the monthly HLS NDVI (placed mid-month) falls back below 0.25, the bare-soil threshold, interpolated linearly. 32 field-seasons: median 5 June (day 156), half between 15 May and 14 June; per field 27 May, 8 June and 4 June. NARC announced the start of the Maru wheat harvest on 7 June 2026 (Petra), two days from this estimate.
 
-| calendar | equal priorities, first | water-first, first | largest score change |
-|---|---|---|---|
-| 1 November, FAO-56 lengths (used) | wheat–lentil | wheat–lentil | – |
-| 14 December, wheat 240 days (runs to August) | wheat–lentil | wheat–fallow | 9.3 points |
-| 14 December, wheat to 7 June (175 days) | wheat–lentil | wheat–fallow | 5.3 points |
+FAO-56 Table 11 stage lengths keep their shares and are stretched to the local season length; Kc values are FAO-56 Table 12. One calendar is used for all three fields and every year: a typical season, not a forecast.
 
-The November calendar is kept: a 240-day wheat season from 14 December would run into August, past any Maru harvest, and the 7 June harvest date comes from a different season (2026).
+**What changed from the earlier FAO default (1 November, wheat 240 days to late June).** Wheat water need fell from 670 to 461 mm a season (FAO’s range is 450–650 mm). With equal or soil-first priorities wheat–lentil stays first on every field. With water-first priorities wheat–fallow now leads: resting the land wins when water is all that matters.

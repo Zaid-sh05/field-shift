@@ -23,11 +23,23 @@ class ScoringTests(unittest.TestCase):
                    * pd.Timestamp(k + "-15").days_in_month for k, m in months.loc["2010-01":"2019-12"].iterrows()) / 10
         self.assertTrue(1200 < year < 1500, year)
 
-    def test_driest_season_on_record_is_2024_25(self):
+    def test_driest_wheat_windows_on_record(self):
+        # Wheat grows 14 Dec - 5 Jun. In that window 2013-14 is the driest season and 2024-25 the second.
         seasons = s.crop_seasons("maru_1", "WHEAT")
         self.assertEqual(len(seasons), 27)
-        self.assertEqual(min(seasons, key=lambda y: seasons[y]["rain_mm"]), 2025)
-        self.assertLess(seasons[2025]["met"], 0.3)
+        self.assertEqual(sorted(seasons, key=lambda y: seasons[y]["rain_mm"])[:2], [2014, 2025])
+        self.assertLess(seasons[2025]["met"], 0.4)
+
+    def test_local_calendar(self):
+        # Wheat: sown 14 Dec (Maru trial), 173 days to 5 Jun (median satellite season end).
+        # Lentil: 14 Dec to 2 Jun (Maru trial). FAO-56 stage shares are stretched to these lengths.
+        crops = s._tables()[1]
+        self.assertEqual([int(crops.loc[c].season_days) for c in ("WHEAT", "LENTIL")], [173, 170])
+        self.assertEqual((int(crops.loc["WHEAT"].sow_month), int(crops.loc["WHEAT"].sow_day)), (12, 14))
+        self.assertEqual(s.kc_on_day("WHEAT", 173, 1.15, 0.4, 173), 0.4)    # end of season reaches kc_end
+        self.assertEqual(s.kc_on_day("WHEAT", 135, 1.15, 0.4, 173), 1.15)   # mid-season: days 122-151 of 173
+        need = sum(v["demand_mm"] for v in s.crop_seasons("maru_1", "WHEAT").values()) / 27
+        self.assertTrue(450 <= need <= 650, need)                         # FAO's range for wheat water need
 
     def test_scores_are_bounded_and_counted_criteria_are_exact(self):
         for field in ("maru_1", "maru_2", "maru_3"):
@@ -50,10 +62,14 @@ class ScoringTests(unittest.TestCase):
         self.assertTrue(only_harvest["low_confidence_top"])
         self.assertTrue(only_harvest["close_call"])  # WW and WL tie on harvest count
 
-    def test_water_first_farmer_gets_a_close_call_flag(self):
-        result = s.evaluate("maru_1", {"water": 5, "risk": 5, "soil": 1, "bare": 1, "harvest": 1})
-        self.assertTrue(result["close_call"])
-        self.assertFalse(result["low_confidence_top"])
+    def test_priorities_change_the_answer(self):
+        # Balanced or soil-first farmers get wheat-lentil first; a water-first farmer gets resting the land.
+        for field in ("maru_1", "maru_2", "maru_3"):
+            self.assertEqual(s.evaluate(field, EQUAL)["rotations"][0]["id"], "WL")
+            self.assertEqual(s.evaluate(field, {"water": 1, "risk": 1, "soil": 5, "bare": 3, "harvest": 1})["rotations"][0]["id"], "WL")
+            water_first = s.evaluate(field, {"water": 5, "risk": 5, "soil": 1, "bare": 1, "harvest": 1})
+            self.assertEqual(water_first["rotations"][0]["id"], "WF")
+            self.assertFalse(water_first["low_confidence_top"])
 
     def test_interface_sliders_match_engine_criteria(self):
         from src.ui_state import CRITERIA
@@ -76,7 +92,7 @@ class ScoringTests(unittest.TestCase):
     def test_replay_covers_every_real_season_and_shows_the_drought(self):
         replay = s.season_replay("maru_1")
         self.assertEqual(len(replay), 27)
-        self.assertEqual(min(replay, key=lambda y: replay[y]["WW"]), 2025)
+        self.assertEqual(min(replay, key=lambda y: replay[y]["WW"]), 2014)
         for year, row in replay.items():
             self.assertEqual(set(row), {"WW", "WL", "WF"})
             self.assertGreaterEqual(row["WF"], row["WW"])  # half the land is fallow and cannot fail
@@ -150,8 +166,8 @@ class ScoringTests(unittest.TestCase):
 
     def test_backtest_summary_matches_the_replay(self):
         summary, replay = s.backtest_summary("maru_1"), s.season_replay("maru_1")
-        self.assertEqual(summary["WW"]["worst_year"], 2025)
-        self.assertEqual(summary["WW"]["worst"], replay[2025]["WW"])
+        self.assertEqual(summary["WW"]["worst_year"], 2014)
+        self.assertEqual(summary["WW"]["worst"], replay[2014]["WW"])
         self.assertEqual(summary["WW"]["under_half"], sum(row["WW"] < 50 for row in replay.values()))
         self.assertGreaterEqual(summary["WF"]["mean"], summary["WW"]["mean"])
 
@@ -164,7 +180,7 @@ class ScoringTests(unittest.TestCase):
 
     def test_calendar_marks_bare_months(self):
         wheat, fallow = s.crop_calendar(["WHEAT", "FALLOW"])
-        self.assertEqual(wheat, [None] + ["WHEAT"] * 8 + [None] * 3)  # Oct bare, Nov-Jun wheat, Jul-Sep bare
+        self.assertEqual(wheat, [None] * 2 + ["WHEAT"] * 7 + [None] * 3)  # Oct-Nov bare, Dec-Jun wheat, Jul-Sep bare
         self.assertEqual(fallow, [None] * 12)
 
 
