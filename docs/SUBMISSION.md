@@ -26,8 +26,7 @@ The deck is built by `prep/deck/build_deck.py`. Figures behind it, in `docs/figu
 
 ## 3. Final project link
 
-- Live app: https://zaid-sh05.github.io/field-shift/
-- Earlier Streamlit version: https://field-shift-maru.streamlit.app
+- Live app: https://zaid-sh05.github.io/field-shift/app/
 - Code and data: https://github.com/Zaid-sh05/field-shift
 
 ## 4. Project details
@@ -122,7 +121,7 @@ The deck is built by `prep/deck/build_deck.py`. Figures behind it, in `docs/figu
 - **ChatGPT / Codex (OpenAI)** helped a teammate assemble the Maru data package from published sources.
 - **The app runs no generative AI.** Scores and advice come from a transparent rule-based engine, and the sentences on screen are fixed templates filled with its numbers. Nothing in the app recommends a rotation.
 - **One small statistical model is trained on our own data:** a least-squares line that predicts the winter greenness peak (HLS NDVI) from season rain (NASA POWER), fitted on 33 field-seasons. Correlation 0.45. On seasons held out of training its error is 0.12 NDVI, against 0.15 for always guessing the mean. The app shows that error next to every estimate.
-- The 30-second video uses AI-generated illustrative footage (Google Flow), labelled as such on screen.
+- The demo video is AI-generated: every scene is illustrative, not filmed at Maru, and it says so on screen. Its numbers come from the app.
 - No AI-generated data is presented as measurement. Every number traces to a NASA dataset or a cited publication.
 
 ## 6. References

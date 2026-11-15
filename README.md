@@ -4,7 +4,7 @@
 
 > NASA Space Apps Challenge 2026 · Challenge: **Field Shift: Adapting Farms with NASA Data** · Local event: Jordan University of Science and Technology (JUST), 14–15 Nov 2026
 
-**Live app: https://zaid-sh05.github.io/field-shift/** (React site) · earlier Streamlit version: https://field-shift-maru.streamlit.app
+**Live app: https://zaid-sh05.github.io/field-shift/app/**
 
 An Arabic-first decision-support tool for rainfed farms around **Maru, Irbid (northern Jordan)**. A farmer picks a field, sets their priorities, and compares **three crop-rotation strategies side by side**: wheat–wheat, wheat–lentil and wheat–fallow (the rotations tested at Maru in published trials), against what the field has been doing. Each rotation gets a score for the farmer's own priorities, a plain sentence and the numbers behind every criterion, a month-by-month crop and bare-soil calendar, and a **confidence badge on every score**, so the farmer can see what the satellites observed and what is only an estimate.
 
