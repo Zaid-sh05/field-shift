@@ -6,11 +6,13 @@ import { BADGE, Backdrop, FieldMap, LineChart, Reveal, ScoreRing, Slider, useCou
 // Strings that only this site needs. Everything else comes from the shared i18n.json (exported in data.json).
 const LOCAL = {
   ar: {
+    name: "تباشير", name_alt: "Agri-Signs",
+    name_meaning: "«تباشير» هي أولى علامات الخير: تباشير المطر، وتباشير الموسم. ونحن نقرأ علامات الأقمار الصناعية لنحمل للمزارع تباشير موسمه.",
     brand_tag: "تحدي ناسا Space Apps 2026 · مرو، إربد",
     hero_title: "أي دورة زراعية تناسب حقلك؟",
     hero_text: "قارن ثلاث دورات زراعية ببيانات أقمار ناسا التي فحصناها مقابل القياس الأرضي. نعرض لك الأرقام ومقدار الثقة بها، والقرار يبقى لك.",
     hero_cta: "ابدأ باختيار حقلك",
-    fact_fallow: "موسم بور رصدته الأقمار منذ 2015", fact_error: "انخفاض خطأ الحرارة بعد تصحيح الارتفاع", fact_drought: "نقص مطر موسم 2024–25 عن المعتاد",
+    fact_fallow: "موسم بور رصدته الأقمار منذ 2015", fact_error: "انخفاض خطأ الحرارة بعد تصحيح الارتفاع", fact_drought: "نقص مطر موسم ⁦2024–25⁩ عن المعتاد",
     step_field: "الحقل", step_priorities: "أولوياتك", step_compare: "المقارنة", step_advisor: "المستشار", step_trust: "الثقة",
     field_title: "١. اختر حقلك", field_hint: "اضغط على حقل في الخريطة أو اختره من الأزرار.",
     elevation: "الارتفاع", slope: "الميل", metres: "م",
@@ -20,10 +22,12 @@ const LOCAL = {
     calendar_title: "متى تكون التربة مزروعة ومتى تكون مكشوفة",
     advisor_section: "٤. مستشار الموسم القادم", trust_section: "٥. إلى أي حد نثق ببيانات ناسا؟",
     pick_field_first: "اختر حقلًا أولًا لتظهر المقارنة.", not_set: "لم أحدّد",
-    footer: "Field Shift أداة لدعم القرار وليست بديلًا عن خبرتك أو عن المرشد الزراعي.", code: "الشيفرة والبيانات على GitHub",
+    footer: "تباشير أداة لدعم القرار وليست بديلًا عن خبرتك أو عن المرشد الزراعي.", code: "الشيفرة والبيانات على GitHub",
     rank: "الترتيب", sources_toggle: "مصادر الأرقام وحدودها",
   },
   en: {
+    name: "Agri-Signs", name_alt: "تباشير",
+    name_meaning: "“Tabasheer” (تباشير) is Arabic for the first signs of good news: the first signs of rain, the first signs of a season. We read the signs from satellites and bring them to the farmer.",
     brand_tag: "NASA Space Apps 2026 · Maru, Irbid",
     hero_title: "Which crop rotation fits your field?",
     hero_text: "Compare three rotations using NASA satellite data that we checked against ground measurements. You see the numbers and how far to trust them. The decision stays yours.",
@@ -38,7 +42,7 @@ const LOCAL = {
     calendar_title: "When the soil is cropped and when it is bare",
     advisor_section: "4. Next-season advisor", trust_section: "5. How far do we trust NASA data here?",
     pick_field_first: "Pick a field first to see the comparison.", not_set: "Not set",
-    footer: "Field Shift supports your decision. It does not replace your experience or your extension officer.", code: "Code and data on GitHub",
+    footer: "Agri-Signs supports your decision. It does not replace your experience or your extension officer.", code: "Code and data on GitHub",
     rank: "Rank", sources_toggle: "Where the numbers come from, and their limits",
   },
 };
@@ -82,8 +86,10 @@ function Hero({ t, onStart }) {
   return (
     <header className="hero">
       <p className="tag">{t("brand_tag")}</p>
+      <p className="hero-name">{t("name")} <span>{t("name_alt")}</span></p>
       <h1>{t("hero_title")}</h1>
       <p className="lead">{t("hero_text")}</p>
+      <p className="meaning">{t("name_meaning")}</p>
       <button className="cta" onClick={onStart}>{t("hero_cta")} <span aria-hidden="true">↓</span></button>
       <div className="facts">
         {facts.map(([value, unit, key]) => <Fact key={key} value={value} unit={unit} label={t(key)} />)}
@@ -365,7 +371,7 @@ export default function App() {
     <>
       <Backdrop />
       <nav className="topbar">
-        <a className="brand" href="#top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}><span className="logo" aria-hidden="true">🌾</span> Field Shift</a>
+        <a className="brand" href="#top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}><span className="logo" aria-hidden="true">🌾</span> {t("name")} <small>{t("name_alt")}</small></a>
         <div className="steps">{steps.map(([id, key]) => <button key={id} onClick={() => go(id)}>{t(key)}</button>)}</div>
         <button className="lang" onClick={() => setLang(lang === "ar" ? "en" : "ar")} aria-label="Language">{lang === "ar" ? "English" : "العربية"}</button>
       </nav>

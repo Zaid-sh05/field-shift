@@ -1,4 +1,6 @@
-# Field Shift: Rotation Explorer for Jordanian Farms
+# تباشير · Agri-Signs: Rotation Explorer for Jordanian Farms
+
+*Tabasheer* (تباشير) is Arabic for the first signs of good news: the first signs of rain, the first signs of a season. The tool reads the signs from NASA satellites and brings them to the farmer. Built for the Field Shift challenge; the repository keeps the challenge's name.
 
 > NASA Space Apps Challenge 2026 · Challenge: **Field Shift: Adapting Farms with NASA Data** · Local event: Jordan University of Science and Technology (JUST), 14–15 Nov 2026
 

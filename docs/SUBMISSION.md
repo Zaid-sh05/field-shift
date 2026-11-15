@@ -7,7 +7,7 @@ Deadline: **Sunday 15 Nov 2026, 11:59 PM**.
 
 ## 1. High-level summary
 
-Field Shift is an Arabic-first crop-rotation explorer for rainfed farms around Maru, Irbid, in northern Jordan, one of the most water-scarce countries on Earth. A farmer picks their field, sets what matters to them, and compares three rotations side by side (wheat–wheat, wheat–lentil, wheat–fallow) against what the field is already doing.
+Agri-Signs (تباشير, *Tabasheer*: Arabic for the first signs of good news, like the first signs of rain) is an Arabic-first crop-rotation explorer for rainfed farms around Maru, Irbid, in northern Jordan, one of the most water-scarce countries on Earth. A farmer picks their field, sets what matters to them, and compares three rotations side by side (wheat–wheat, wheat–lentil, wheat–fallow) against what the field is already doing.
 
 The current rotation is not guessed: 11 years of NASA HLS satellite imagery show that our three study fields were never left fallow: in 31 of 33 field-seasons since 2015 they carried a clear winter crop, and the other 2 were borderline green, never bare. Every number the farmer sees carries a confidence badge, because we tested NASA data against the ground before trusting it. Near Maru, NASA POWER temperatures ran 2.4 °C too warm because its grid cell sits 440 m lower than the farm. We corrected for elevation and cut the error by two thirds. Satellite rainfall still misses about 22% of local rain, so the tool says so. The same data shows why this matters now: 2024–25 was the driest season in 27 years, 55% below normal, and the satellites watched the crop's greenness fall by almost half.
 
