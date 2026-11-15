@@ -274,6 +274,8 @@ def soil_moisture_now(field_id):
 def next_season(field_id, history, weights, rain_factor=1.0, warming_c=0.0):
     """Options for the coming season, given what the farmer grew before (oldest first, most recent last).
 
+    None preserves the position of an unknown earlier season. The most recent season must be known.
+
     Each option (every crop in data/crops.csv, including fallow) is scored on the same five criteria:
       water, risk   how often rain covered this crop's water need in the real record (fallow has no crop to fail)
       soil          rotation rules met out of 3: not the same as last season; a legume within the three-season
@@ -285,7 +287,7 @@ def next_season(field_id, history, weights, rain_factor=1.0, warming_c=0.0):
     """
     _, crops, profile, _, _ = _tables()
     history = list(history)
-    if not history or any(c not in crops.index for c in history):
+    if not history or history[-1] is None or any(c is not None and c not in crops.index for c in history):
         raise ValueError("history needs at least last season's crop, from: " + ", ".join(crops.index))
     if set(weights) != set(CRITERIA) or sum(weights.values()) <= 0:
         raise ValueError("weights must cover: " + ", ".join(CRITERIA))
@@ -299,7 +301,7 @@ def next_season(field_id, history, weights, rain_factor=1.0, warming_c=0.0):
         window = history[-2:] + [crop]
         rules = {
             "varied": crop != history[-1],
-            "legume": any(bool(crops.loc[c].legume) for c in window),
+            "legume": any(bool(crops.loc[c].legume) for c in window if c is not None),
             "no_third": not (grown and len(history) >= 2 and history[-1] == history[-2] == crop),
         }
         seasons = crop_seasons(field_id, crop, rain_factor, warming_c) if grown else {}

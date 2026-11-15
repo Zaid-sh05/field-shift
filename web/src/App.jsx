@@ -260,7 +260,7 @@ function Backtest({ t, lang, field }) {
       <h3>{t("replay_title")}</h3>
       <LineChart labels={years.map(season)} highlight={years.indexOf(worst)} yMin={0} yMax={100} yFormat={(v) => `${Math.round(v)}%`}
         series={field.rotations.map((r) => ({ name: names[r.id], color: ROTATION_COLORS[r.id], values: years.map((y) => field.replay[y][r.id]) }))} />
-      <p className="note">{t("replay_note", { n: years.length, season: season(worst), values: field.rotations.map((r) => `${names[r.id]} ${field.replay[worst][r.id]}%`).join(" · ") })}</p>
+      <p className="note">{t("replay_note", { n: years.length, season: season(worst), values: field.rotations.map((r) => `${names[r.id]} ${field.replay[worst][r.id]}%`).join(" · ") })} {t("fallow_water_note")}</p>
       <div className="table-wrap"><table>
         <thead><tr><th>{t("bt_rotation")}</th><th>{t("bt_mean")}</th><th>{t("bt_worst")}</th><th>{t("bt_under_half")}</th></tr></thead>
         <tbody>{field.rotations.map((r) => { const b = field.backtest[r.id]; return (
@@ -273,13 +273,13 @@ function Backtest({ t, lang, field }) {
 function Advisor({ t, fieldId, weights, rain, warming }) {
   // ?history=WHEAT,WHEAT,WHEAT pre-fills the three seasons, for demo links.
   const [history, setHistory] = useState(() => {
-    const asked = (new URLSearchParams(window.location.search).get("history") || "").split(",").filter((c) => c in data.crops).slice(-3);
+    const raw = new URLSearchParams(window.location.search).get("history") ?? "";
+    const asked = raw.split(",").slice(-3).map((crop) => Object.hasOwn(data.crops, crop) ? crop : null);
     return [...Array(3 - asked.length).fill(null), ...asked];
   });
   const field = data.fields[fieldId];
-  const known = history.filter(Boolean);
   const ready = history[2] != null;
-  const result = ready ? nextSeason(data, fieldId, known, weights, rain, warming) : null;
+  const result = ready ? nextSeason(data, fieldId, history, weights, rain, warming) : null;
   const labels = ["adv_two_before", "adv_before", "adv_last"];
   return (
     <Reveal as="section" id="advisor" className="panel">
@@ -300,7 +300,8 @@ function Advisor({ t, fieldId, weights, rain, warming }) {
       </div>
       {!ready && <p className="callout soft">{t("advisor_prompt")}</p>}
       {ready && (
-        <div className="advice" key={known.join()}>
+        <div className="advice" key={history.join()}>
+          {history[1] == null && <p className="note">{t("advisor_history_gap")}</p>}
           <p className="note">
             {t(field.last_season.driest ? "adv_last_driest" : "adv_last_rain", { season: season(field.last_season.year), rain: field.last_season.rain_mm })}{" "}
             {t(`adv_moisture_${field.soil_moisture.state}`, { month: field.soil_moisture.month })} <Badge t={t} level="medium" />

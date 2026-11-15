@@ -117,6 +117,15 @@ class ScoringTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 s.next_season("maru_1", bad, EQUAL)
 
+    def test_next_season_keeps_unknown_season_in_its_calendar_slot(self):
+        for oldest in ("WHEAT", "LENTIL"):
+            with self.subTest(oldest=oldest):
+                result = s.next_season("maru_1", [oldest, None, "WHEAT"], EQUAL)
+                self.assertEqual(result, s.next_season("maru_1", ["WHEAT"], EQUAL))
+        result = s.next_season("maru_1", ["WHEAT", None, "LENTIL"], EQUAL)
+        self.assertEqual(result["options"][-1]["crop"], "LENTIL")
+        self.assertTrue(result["options"][-1]["legume_repeat"])
+
     def test_vigor_model_is_trained_validated_and_modest(self):
         model = s.vigor_model()
         self.assertEqual((model["points"], model["seasons"]), (33, 11))
