@@ -9,7 +9,6 @@ Criteria (0-100, higher is better), for a two-season rotation on one field:
 
 The engine ranks by the farmer's own weights. It never recommends: the farmer and the extension officer decide.
 """
-import calendar
 import json
 import math
 from datetime import date, timedelta
@@ -83,14 +82,29 @@ def _tables():
 
 
 @lru_cache(maxsize=None)
+def _daily_rain():
+    """Daily NASA POWER precipitation in mm/day, indexed by date."""
+    daily = pd.read_csv(
+        DATA / "source" / "01_climate_daily.csv",
+        usecols=["date", "PRECTOTCORR"],
+    )
+    daily["date"] = pd.to_datetime(daily["date"]).dt.strftime("%Y-%m-%d")
+    daily["PRECTOTCORR"] = pd.to_numeric(daily["PRECTOTCORR"], errors="raise")
+    if daily["date"].duplicated().any() or daily["PRECTOTCORR"].isna().any():
+        raise ValueError("Daily rainfall data contains duplicate dates or missing values.")
+    return daily.set_index("date")["PRECTOTCORR"]
+
+
+@lru_cache(maxsize=None)
 def crop_seasons(field_id, crop, rain_factor=1.0, warming_c=0.0):
     """Per harvest year: crop water demand (mm), rain during the crop's days (mm) and the share met (0-1).
 
-    `rain_factor` and `warming_c` build a what-if scenario from the real record: every month's rain is
+    `rain_factor` and `warming_c` build a what-if scenario from the real record: daily rain is
     multiplied by the factor and every temperature raised by the warming (relative humidity held constant,
     so warmer air is also drier air). The defaults give the observed record.
     """
     wide, crops, _, _, elevation = _tables()
+    daily_rain = _daily_rain()
     row = crops.loc[crop]
     months = wide.loc[field_id]
     out = {}
@@ -106,7 +120,7 @@ def crop_seasons(field_id, crop, rain_factor=1.0, warming_c=0.0):
             demand += kc_on_day(crop, d, row.kc_mid, row.kc_end) * et0_penman_monteith(
                 m.tmean_c + warming_c, m.tmax_c + warming_c, m.tmin_c + warming_c, m.rh_pct, m.wind_m_s,
                 m.solar_mj_m2_day, day.timetuple().tm_yday, elevation[field_id])
-            rain += rain_factor * m.precip_mm / calendar.monthrange(day.year, day.month)[1]
+            rain += rain_factor * float(daily_rain.loc[day.isoformat()])
         else:
             out[year] = {"demand_mm": float(demand), "rain_mm": float(rain), "met": float(min(1.0, rain / demand))}
     return out
