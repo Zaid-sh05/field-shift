@@ -164,7 +164,8 @@
     "priority_harvest": "عدد مواسم الحصاد",
     "detail_harvest": "مواسم الحصاد: {harvests} من كل {of}. لا نفترض أسعارًا ولا إنتاجية.",
     "source_harvest": "يعتمد التقييم على عدد مواسم الحصاد فقط، ولا يفترض أسعارًا أو إنتاجية.",
-    "vigor_stages": "اختبرناه أيضًا على {long_seasons} موسمًا من صور Landsat (تطابق HLS بمعامل {landsat_hls_r}): المطر وحده يفسّر قليلًا جدًا (R² = {r2_long_rain}، أي ليس أفضل من المتوسط)، لذلك هذا الرقم سيناريو وليس توقّعًا. إضافة خضرة كانون الثاني من الأقمار الصناعية ترفعه إلى R² = {r2_long_jan}، وبحلول شباط يصبح الموسم واضحًا (R² = {r2_feb} على آخر {feb_seasons} مواسم). أي أن قرار المزارع، لا المطر وحده، هو ما يصنع الفرق."
+    "vigor_stages": "اختبرناه أيضًا على {long_seasons} موسمًا من صور Landsat (تطابق HLS بمعامل {landsat_hls_r}): المطر وحده لا يتنبأ بالموسم (R² = {r2_long_rain}، أي ليس أفضل من المتوسط)، لذلك هذا الرقم سيناريو وليس توقّعًا. أول إشارة يُعتمد عليها هي خضرة شباط: R² = {r2_long_feb} على {long_feb_seasons} موسمًا من Landsat و{r2_feb} على آخر {feb_seasons} مواسم من HLS. أي أن حالة الزرع وقرار المزارع، لا المطر وحده، هما ما يصنع الفرق.",
+    "feb_check": "فحص شباط للموسم الماضي ({label}): خضرة شباط كانت {feb}، فتوقّع النموذج قمةً عند {predicted} ± {error}، ورأت الأقمار الصناعية لاحقًا {actual}."
   },
   "en": {
     "awaiting_rotation": "Awaiting rotation data",
@@ -331,6 +332,7 @@
     "priority_harvest": "Number of harvests",
     "detail_harvest": "Harvests: {harvests} in every {of} seasons. No prices or yields are assumed.",
     "source_harvest": "Based on the number of harvest seasons only. No prices or yields are assumed.",
-    "vigor_stages": "We also tested it on {long_seasons} seasons of Landsat imagery (matching HLS at r {landsat_hls_r}): rain alone explains very little (R² = {r2_long_rain}, no better than the average), so this number is a scenario, not a forecast. Adding January satellite greenness lifts it to R² = {r2_long_jan}, and by February the season is largely visible (R² = {r2_feb} over the last {feb_seasons} seasons). Rain alone does not decide the season; the farmer's choices matter."
+    "vigor_stages": "We also tested it on {long_seasons} seasons of Landsat imagery (matching HLS at r {landsat_hls_r}): rain alone does not predict the season (R² = {r2_long_rain}, no better than the average), so this number is a scenario, not a forecast. The first reliable signal is February greenness: R² = {r2_long_feb} over {long_feb_seasons} Landsat seasons and {r2_feb} over the last {feb_seasons} HLS seasons. The state of the crop and the farmer's choices, not rain alone, make the difference.",
+    "feb_check": "February check, last season ({label}): February greenness was {feb}, so the model expected a peak of {predicted} ± {error}; the satellites later saw {actual}."
   }
 }

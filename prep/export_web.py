@@ -60,6 +60,7 @@ def field_block(feature):
         "replay": {str(y): row for y, row in scoring.season_replay(fid).items()},
         "backtest": scoring.backtest_summary(fid),
         "soil_moisture": scoring.soil_moisture_now(fid),
+        "feb_check": scoring.feb_check(fid),
         "last_season": scoring.next_season(fid, ["WHEAT"], {c: 1 for c in scoring.CRITERIA})["last_season"],
     }
 

@@ -271,8 +271,10 @@ def vigor_model():
             "rain_min": round(float(rain.min())), "rain_max": round(float(rain.max())), **vigor_stages()}
 
 
-def _held_out_r2(rows, features):
-    """R² on seasons the model never saw: each season (all fields together) is held out once, a line fitted on the rest."""
+def _held_out(rows, features):
+    """Each season (all fields together) is held out once and predicted from a line fitted on the others.
+
+    Returns R² and mean absolute error on those unseen seasons, and the number of seasons."""
     import numpy as np
     rows = rows.dropna(subset=features + ["peak"])
     y, pred = rows.peak.to_numpy(), np.empty(len(rows))
@@ -281,7 +283,8 @@ def _held_out_r2(rows, features):
         X = np.c_[np.ones(len(rows)), rows[features].to_numpy(float)]
         beta = np.linalg.lstsq(X[~test], y[~test], rcond=None)[0]
         pred[test] = X[test] @ beta
-    return round(float(1 - ((pred - y) ** 2).sum() / ((y - y.mean()) ** 2).sum()), 2), int(rows.season.nunique())
+    return {"r2": round(float(1 - ((pred - y) ** 2).sum() / ((y - y.mean()) ** 2).sum()), 2),
+            "mae": round(float(np.abs(pred - y).mean()), 2), "seasons": int(rows.season.nunique())}
 
 
 def _season_rows(monthly):
@@ -299,26 +302,40 @@ def _season_rows(monthly):
     return pd.DataFrame(rows)
 
 
+def _hls_season_rows():
+    sat = pd.read_csv(DATA / "sat_monthly.csv")
+    return _season_rows(sat[sat.variable == "ndvi"].rename(columns={"value": "ndvi"}))
+
+
 @lru_cache(maxsize=None)
 def vigor_stages():
     """How much the vigour estimate can be trusted, and when in the season. Not used for any score.
 
-    Long test: 26 seasons of Landsat (data/landsat_ndvi_monthly.csv, prep/landsat_long.py), against the 11 HLS
-    seasons the model is trained on. Rain alone explains little over the long record, so the app's rain-only
-    estimate is shown as a scenario, not a forecast; satellite greenness early in the season helps, and by
-    February the season is largely visible (HLS record).
+    Long test: 27 seasons of Landsat (data/landsat_ndvi_monthly.csv, prep/landsat_long.py), against the 11 HLS
+    seasons the model is trained on. Rain alone explains almost nothing over the long record, so the app's
+    rain-only estimate is a scenario, not a forecast. February greenness is the first signal that holds up in
+    both halves of the record; January does not (it helps after 2013 and hurts before), so it is not claimed.
     """
     import numpy as np
-    sat = pd.read_csv(DATA / "sat_monthly.csv")
-    hls = _season_rows(sat[sat.variable == "ndvi"].rename(columns={"value": "ndvi"}))
-    long = _season_rows(pd.read_csv(DATA / "landsat_ndvi_monthly.csv"))
+    hls, long = _hls_season_rows(), _season_rows(pd.read_csv(DATA / "landsat_ndvi_monthly.csv"))
     both = long.merge(hls, on=["field", "season"], suffixes=("", "_hls"))
-    r2_long_rain, long_seasons = _held_out_r2(long, ["rain"])
-    r2_long_jan, _ = _held_out_r2(long, ["rain", "jan"])
-    r2_feb, feb_seasons = _held_out_r2(hls, ["rain", "feb"])
-    return {"long_seasons": long_seasons, "long_points": len(long),
+    rain, feb_long, feb = _held_out(long, ["rain"]), _held_out(long, ["feb"]), _held_out(hls, ["feb"])
+    return {"long_seasons": rain["seasons"], "long_points": len(long),
             "landsat_hls_r": round(float(np.corrcoef(both.peak, both.peak_hls)[0, 1]), 2),
-            "r2_long_rain": r2_long_rain, "r2_long_jan": r2_long_jan, "r2_feb": r2_feb, "feb_seasons": feb_seasons}
+            "r2_long_rain": rain["r2"], "r2_long_feb": feb_long["r2"], "long_feb_seasons": feb_long["seasons"],
+            "r2_feb": feb["r2"], "feb_error": feb["mae"], "feb_seasons": feb["seasons"]}
+
+
+def feb_check(field_id):
+    """The February check on the field's latest season: the peak predicted from February greenness alone,
+    by a line fitted on every other season (all fields), next to the peak the satellites saw later."""
+    import numpy as np
+    rows = _hls_season_rows().dropna(subset=["feb", "peak"])
+    season = int(rows[rows.field == field_id].season.max())
+    train, row = rows[rows.season != season], rows[(rows.field == field_id) & (rows.season == season)].iloc[0]
+    slope, intercept = np.polyfit(train.feb, train.peak, 1)
+    return {"season": season, "feb": round(float(row.feb), 2), "predicted": round(float(intercept + slope * row.feb), 2),
+            "actual": round(float(row.peak), 2), "error": vigor_stages()["feb_error"]}
 
 
 def predict_vigor(field_id, rain_factor=1.0):

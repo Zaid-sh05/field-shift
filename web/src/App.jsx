@@ -171,6 +171,7 @@ function PrioritiesStep({ t, weights, setWeights }) {
 function Scenario({ t, fieldId, rain, setRain, warming, setWarming }) {
   const vigor = predictVigor(data, fieldId, rain);
   const shown = useCountUp(vigor.ndvi * 100);
+  const feb = data.fields[fieldId].feb_check;
   return (
     <div className="scenario">
       <h3>{t("scenario_title")}</h3>
@@ -187,6 +188,7 @@ function Scenario({ t, fieldId, rain, setRain, warming, setWarming }) {
         </div>
       </div>
       <p className={rain || warming ? "callout" : "note"}>{rain || warming ? t("scenario_note", { rain, warming }) : t("scenario_hint")}</p>
+      <p className="note">{t("feb_check", { ...feb, label: `${feb.season - 1}–${String(feb.season).slice(2)}` })}</p>
       <details><summary>{t("vigor_ndvi")}</summary><p className="note">{t("vigor_model", data.vigor)} {vigor.extrapolated && t("vigor_extrapolated", data.vigor)} {t("vigor_stages", data.vigor)}</p></details>
     </div>
   );

@@ -57,6 +57,8 @@ def _scenario_controls(st, t, rotations, language, field_id):
         a.metric(t("vigor_rain"), f'{vigor["rain_mm"]} mm')
         b.metric(t("vigor_ndvi"), f'{vigor["ndvi"]:.2f} ± {vigor["error"]:.2f}')
         st.text(t(f'vigor_{vigor["state"]}'))
+        feb = scoring.feb_check(field_id)
+        st.caption(t("feb_check").format(**feb, label=f'{feb["season"] - 1}–{str(feb["season"])[2:]}'))
         st.caption(t("vigor_model").format(**model) + (" " + t("vigor_extrapolated").format(**model)
                                                         if vigor["extrapolated"] else "") + " " + t("vigor_stages").format(**model))
     # Satellites ruled some rotations out (is_current false); only the farmer can settle the rest.

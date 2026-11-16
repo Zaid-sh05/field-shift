@@ -159,8 +159,11 @@ class ScoringTests(unittest.TestCase):
         self.assertGreaterEqual(v["long_seasons"], 25)                  # tested well beyond the 11 training seasons
         self.assertGreater(v["landsat_hls_r"], 0.9)                     # Landsat matches HLS, so the long test is fair
         self.assertLess(v["r2_long_rain"], 0.2)                         # rain alone: a scenario, never sold as a forecast
-        self.assertGreater(v["r2_long_jan"], v["r2_long_rain"])         # early-season greenness adds real information
-        self.assertGreater(v["r2_feb"], v["r2_long_jan"])               # and the season gets clearer as it goes
+        self.assertGreater(v["r2_long_feb"], 0.5)                       # February greenness holds up over the long record
+        self.assertGreater(v["r2_feb"], 0.5)                            # and on the HLS seasons the app is built on
+        check = s.feb_check("maru_1")
+        self.assertEqual(check["season"], 2025)                         # the latest season, never used to fit its own line
+        self.assertLess(abs(check["predicted"] - check["actual"]), 3 * check["error"])
 
     def test_drought_scenario_changes_the_next_season_advice(self):
         water_first = {"water": 5, "risk": 5, "soil": 1, "bare": 1, "harvest": 1}
