@@ -58,7 +58,7 @@ def _scenario_controls(st, t, rotations, language, field_id):
         b.metric(t("vigor_ndvi"), f'{vigor["ndvi"]:.2f} ± {vigor["error"]:.2f}')
         st.text(t(f'vigor_{vigor["state"]}'))
         st.caption(t("vigor_model").format(**model) + (" " + t("vigor_extrapolated").format(**model)
-                                                        if vigor["extrapolated"] else ""))
+                                                        if vigor["extrapolated"] else "") + " " + t("vigor_stages").format(**model))
     # Satellites ruled some rotations out (is_current false); only the farmer can settle the rest.
     possible = [r for r in rotations if r.get("is_current") is not False]
     names = {r["id"]: r.get(f"name_{language}") or r["id"] for r in possible}

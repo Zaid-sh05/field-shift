@@ -163,7 +163,8 @@
     "adv_scenario": "الخيارات أدناه محسوبة للسيناريو الافتراضي: مطر {rain}% وحرارة +{warming} درجة.",
     "priority_harvest": "عدد مواسم الحصاد",
     "detail_harvest": "مواسم الحصاد: {harvests} من كل {of}. لا نفترض أسعارًا ولا إنتاجية.",
-    "source_harvest": "يعتمد التقييم على عدد مواسم الحصاد فقط، ولا يفترض أسعارًا أو إنتاجية."
+    "source_harvest": "يعتمد التقييم على عدد مواسم الحصاد فقط، ولا يفترض أسعارًا أو إنتاجية.",
+    "vigor_stages": "اختبرناه أيضًا على {long_seasons} موسمًا من صور Landsat (تطابق HLS بمعامل {landsat_hls_r}): المطر وحده يفسّر قليلًا جدًا (R² = {r2_long_rain}، أي ليس أفضل من المتوسط)، لذلك هذا الرقم سيناريو وليس توقّعًا. إضافة خضرة كانون الثاني من الأقمار الصناعية ترفعه إلى R² = {r2_long_jan}، وبحلول شباط يصبح الموسم واضحًا (R² = {r2_feb} على آخر {feb_seasons} مواسم). أي أن قرار المزارع، لا المطر وحده، هو ما يصنع الفرق."
   },
   "en": {
     "awaiting_rotation": "Awaiting rotation data",
@@ -329,6 +330,7 @@
     "adv_scenario": "The options below are computed for the what-if scenario: rain {rain}% and temperature +{warming} °C.",
     "priority_harvest": "Number of harvests",
     "detail_harvest": "Harvests: {harvests} in every {of} seasons. No prices or yields are assumed.",
-    "source_harvest": "Based on the number of harvest seasons only. No prices or yields are assumed."
+    "source_harvest": "Based on the number of harvest seasons only. No prices or yields are assumed.",
+    "vigor_stages": "We also tested it on {long_seasons} seasons of Landsat imagery (matching HLS at r {landsat_hls_r}): rain alone explains very little (R² = {r2_long_rain}, no better than the average), so this number is a scenario, not a forecast. Adding January satellite greenness lifts it to R² = {r2_long_jan}, and by February the season is largely visible (R² = {r2_feb} over the last {feb_seasons} seasons). Rain alone does not decide the season; the farmer's choices matter."
   }
 }

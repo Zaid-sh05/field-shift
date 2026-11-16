@@ -97,7 +97,7 @@ The deck is built by `prep/deck/build_deck.py`. Figures behind it, in `docs/figu
 - Crop water demand is potential demand for a well-watered crop, and NASA rain reads low here, so the water scores are conservative.
 - The harvest count is not income: we have no local prices, costs or yields.
 - *Crop calendar.* Sowing is 14 December, the date used in published Maru trials (Bani Khalaf et al. 2024, 2025). Lentil grows 170 days, to 2 June, as in that trial. No wheat harvest date from the trial season is published, so we measured the season end from space: across 32 HLS field-seasons the crop dries down to bare-soil greenness on 5 June (median; half the seasons fall between 15 May and 14 June). NARC announced the start of the Maru wheat harvest on 7 June 2026, two days from our estimate. FAO-56 growth-stage shares are stretched to these local lengths, as FAO-56 advises. The calendar is a typical season, not a forecast, and the rule is the same for all three fields.
-- The vigour model is small (11 seasons on three fields that share one rain series) and sees rain only. It is a modest aid, not a yield forecast.
+- The vigour model is small (11 seasons on three fields that share one rain series) and sees rain only. Over 27 Landsat seasons rain alone explains almost nothing (held-out R² −0.10), so it is a scenario aid, not a yield forecast; the app says so next to the estimate.
 - Scenarios shift the observed record; they are not climate projections. They change the water and dry-year scores only.
 - NDVI cannot tell wheat from lentil, so the satellite history rules out wheat–fallow as the current rotation but cannot choose between the other two.
 
@@ -109,6 +109,7 @@ The deck is built by `prep/deck/build_deck.py`. Figures behind it, in `docs/figu
 |---|---|---|
 | HLS Landsat 30 m (HLSL30 v2.0) | `NASA/HLS/HLSL30/v002` | NDVI, crop history, bare-soil months |
 | HLS Sentinel-2 30 m (HLSS30 v2.0) | `NASA/HLS/HLSS30/v002` | NDVI, crop history, bare-soil months |
+| Landsat 5/7/8/9 Collection 2 L2 | `LANDSAT/LT05`, `LE07`, `LC08`, `LC09` `/C02/T1_L2` | NDVI 1999–2025, long-record test of the vigour model |
 | SMAP L4 soil moisture | `NASA/SMAP/SPL4SMGP/008` | Root-zone moisture context |
 | GPM IMERG V07 monthly | `NASA/GPM_L3/IMERG_MONTHLY_V07` | Rainfall, cross-check with POWER and station |
 | GRACE/GRACE-FO mascons (JPL) | `NASA/GRACE/MASS_GRIDS_V04/MASCON` | Regional water-storage trend |
@@ -120,7 +121,7 @@ The deck is built by `prep/deck/build_deck.py`. Figures behind it, in `docs/figu
 - **Claude (Anthropic)** helped with research and preparation, with writing and reviewing data-processing code, with analysis (the elevation check, validation and figures), and with drafting documentation. The team reviewed and ran all code.
 - **ChatGPT / Codex (OpenAI)** helped a teammate assemble the Maru data package from published sources.
 - **The app runs no generative AI.** Scores and advice come from a transparent rule-based engine, and the sentences on screen are fixed templates filled with its numbers. Nothing in the app recommends a rotation.
-- **One small statistical model is trained on our own data:** a least-squares line that predicts the winter greenness peak (HLS NDVI) from season rain (NASA POWER), fitted on 33 field-seasons. Correlation 0.45. On seasons held out of training its error is 0.12 NDVI, against 0.15 for always guessing the mean. The app shows that error next to every estimate.
+- **One small statistical model is trained on our own data:** a least-squares line that predicts the winter greenness peak (HLS NDVI) from season rain (NASA POWER), fitted on 33 field-seasons. Correlation 0.45. On seasons held out of training its error is 0.12 NDVI, against 0.15 for always guessing the mean. The app shows that error next to every estimate. We then tested it on 27 seasons of Landsat (1999–2025, matching HLS at r 0.96): rain alone explains almost nothing (held-out R² −0.10), so the app shows this estimate as a scenario, not a forecast. January satellite greenness lifts held-out R² to 0.26, and by February the season is largely visible (0.76 over the last 10 seasons).
 - The demo video is AI-generated: every scene is illustrative, not filmed at Maru, and it says so on screen. Its numbers come from the app.
 - No AI-generated data is presented as measurement. Every number traces to a NASA dataset or a cited publication.
 

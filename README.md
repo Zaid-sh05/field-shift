@@ -50,6 +50,7 @@ Numbers are in [`data/validation.json`](data/validation.json), produced by [`pre
 |---|---|---|---|
 | NASA POWER (AG community) | Daily temperature, precipitation, radiation, humidity, wind | ~0.5° | Crop water demand (FAO-56 Penman-Monteith) against rain, in all seasons and in dry seasons |
 | HLS (Harmonized Landsat Sentinel-2) | Red and NIR reflectance → NDVI | 30 m | Crop history per field, which rotation is ruled out, months the soil is green |
+| Landsat 5/7/8/9 Collection 2 | Surface reflectance → NDVI, 1999–2025 | 30 m | Long-record test of the vigour model (27 seasons); not used in the scores |
 | SMAP L4 | Root-zone soil moisture | 9 km | Extracted per field as regional context; not used in the scores |
 | GPM IMERG | Precipitation | ~0.1° | Season rain per field; independent rainfall check against POWER and the Maru station |
 | GRACE / GRACE-FO | Terrestrial water storage | ~3° mascons | Extracted as regional context; not used in the scores |
@@ -98,6 +99,7 @@ prep/                  Offline data scripts (Roles 2, 3, 4)
   figures.py           Slide figures → docs/figures/
   deck/                Pitch deck builder (python-pptx) → docs/Field_Shift_Pitch_Deck.pptx
   export_web.py        Engine results for every field and scenario → web/src/data.json
+  landsat_long.py      Landsat NDVI 1999–2025 per field → data/landsat_ndvi_monthly.csv (vigour model long test)
   features.py          Anomalies, season classification, NDVI monthly profile (pure pandas, self-tested)
 data/                  Generated data files + fields.geojson
 data/source/           Inputs the prep scripts start from (NASA POWER daily, Maru station months)
@@ -122,7 +124,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Checks: `python -m pytest -q tests` (55 tests) and `cd web && npm test` (5 tests).
+Checks: `python -m pytest -q tests` (56 tests) and `cd web && npm test` (5 tests).
 
 To rebuild the React site after a data or engine change:
 
@@ -161,7 +163,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for how we work.
 In line with the Space Apps rules, we disclose AI use:
 
 - The app uses no generative AI. Scores and advice come from a transparent, rule-based engine, and the sentences on screen are fixed templates filled with its numbers. Nothing in the app recommends a rotation.
-- One small statistical model is trained on our own data: a least-squares line from season rain to the satellite greenness peak, fitted on 33 field-seasons and validated on held-out seasons (error 0.12 NDVI against 0.15 for guessing the mean).
+- One small statistical model is trained on our own data: a least-squares line from season rain to the satellite greenness peak, fitted on 33 field-seasons and validated on held-out seasons (error 0.12 NDVI against 0.15 for guessing the mean). We then tested it on 27 seasons of Landsat (1999–2025, matching HLS at r 0.96): rain alone explains almost nothing (held-out R² −0.10), so the app shows this estimate as a scenario, not a forecast. January satellite greenness lifts held-out R² to 0.26, and by February the season is largely visible (0.76 over the last 10 seasons).
 - AI assistants (Claude, ChatGPT) helped with research, with writing and reviewing code, with data analysis and with documentation. The team reviewed and ran everything.
 - The demo video is AI-generated: every scene is illustrative, not filmed at Maru, and it says so on screen.
 

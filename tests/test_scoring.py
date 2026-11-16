@@ -154,6 +154,14 @@ class ScoringTests(unittest.TestCase):
         self.assertFalse(normal["extrapolated"])
         self.assertTrue(s.predict_vigor("maru_1", 2.0)["extrapolated"])
 
+    def test_vigor_long_record_keeps_the_claim_honest(self):
+        v = s.vigor_model()
+        self.assertGreaterEqual(v["long_seasons"], 25)                  # tested well beyond the 11 training seasons
+        self.assertGreater(v["landsat_hls_r"], 0.9)                     # Landsat matches HLS, so the long test is fair
+        self.assertLess(v["r2_long_rain"], 0.2)                         # rain alone: a scenario, never sold as a forecast
+        self.assertGreater(v["r2_long_jan"], v["r2_long_rain"])         # early-season greenness adds real information
+        self.assertGreater(v["r2_feb"], v["r2_long_jan"])               # and the season gets clearer as it goes
+
     def test_drought_scenario_changes_the_next_season_advice(self):
         water_first = {"water": 5, "risk": 5, "soil": 1, "bare": 1, "harvest": 1}
         normal = {o["crop"]: o for o in s.next_season("maru_1", ["LENTIL", "WHEAT"], water_first)["options"]}
